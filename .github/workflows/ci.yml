@@ -75,5 +75,7 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/tests:/app/tests \
+            -e PYTHONPATH=/app \
+            -w /app \
             gnss-agg:ci \
             python3 tests/integration/run_golden_check.py
