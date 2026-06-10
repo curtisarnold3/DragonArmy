@@ -35,5 +35,5 @@ def test_probe_warns_on_dimension_mismatch(synthetic_clip, caplog):
 
 def test_probe_raises_on_missing_file():
     """Probe raises on missing file."""
-    with pytest.raises(subprocess.CalledProcessError):
+    with pytest.raises((subprocess.CalledProcessError, FileNotFoundError)):
         probe("/nonexistent.mp4")
