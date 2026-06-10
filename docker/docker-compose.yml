@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  redis:
+    # Redis pinned by tag and digest for determinism
+    image: redis:7.4-alpine@sha256:de13e74e14b98eb96bdf886791ae47686c3c5d29f9d5f85ea55206843e3fce26
+    container_name: gnss-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: gnss-web
+    # Placeholder command - implemented in Slice 8
+    command: ["python", "-c", "print('web service placeholder')"]
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    volumes:
+      - ../out:/app/out
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: gnss-worker
+    # Placeholder command - implemented in Slice 8
+    command: ["python", "-c", "print('worker service placeholder')"]
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    volumes:
+      - ../out:/app/out
