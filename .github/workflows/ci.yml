@@ -70,3 +70,10 @@ jobs:
       - name: Run tests in container
         run: |
           docker run --rm gnss-agg:ci pytest tests/unit/ -v
+
+      - name: Golden master diagnostic
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/tests:/app/tests \
+            gnss-agg:ci \
+            python3 tests/integration/run_golden_check.py
