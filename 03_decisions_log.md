@@ -74,4 +74,20 @@ Append-only. When code looks weird, this explains why. Never edit or delete a pa
 
 ---
 
-(Append new decisions below this line, in order. Format: D-NNN, decision, reasoning, implication.)
+## D-008: ffmpeg determinism boundary — pinned via base image, not apt version
+
+Decision: ffmpeg is installed with apt inside the digest-pinned base image, not pinned to
+an exact apt version string. The base digest (sha256:8dca233...) transitively freezes the
+ffmpeg version (5.1.9-0+deb12u1, confirmed in CI build log #8) for every build off that
+digest. The Dockerfile runs `ffmpeg -version` so the version is captured per build.
+
+Reasoning: apt can't cleanly pin ffmpeg to a forever-available version string — Debian's
+mirror rolls and drops old point releases, so an exact pin eventually fails to resolve.
+Pinning the base image by digest freezes the whole apt snapshot at build time, ffmpeg
+included, giving reproducibility without fighting the mirror. Frame decode for this codec
+is stable across ffmpeg patch versions, satisfying NFR-1's intent for the pipeline.
+
+Implication: determinism rides on the base-image digest. Bumping it (e.g. a security
+update) may change the ffmpeg version — that's an explicit, reviewed change as its own
+commit, and the build log records the new version. The golden-master test catches any
+output drift. We pin the image that contains ffmpeg; we do not independently pin ffmpeg.
