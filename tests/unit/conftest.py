@@ -13,6 +13,6 @@ def synthetic_clip(tmp_path):
     subprocess.run([
         "ffmpeg", "-f", "lavfi", "-i", "color=red:s=320x240:d=0.333333",
         "-vf", "fps=30", "-vframes", "10", "-vcodec", "ffv1",
-        "-pix_fmt", "yuv420p", "-y", str(clip)
+        "-y", str(clip)
     ], check=True, capture_output=True)
     return clip
