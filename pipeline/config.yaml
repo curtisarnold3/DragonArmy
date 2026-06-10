@@ -1,6 +1,18 @@
 # GNSS-AGG Configuration
 # Layout constants and detection parameters for Slingshot "GNSS SPOOFING (Standard)" layout
 
+base_map:
+  method: temporal_median
+  sample_frames: 45
+
+masks:
+  title:
+    x: [840, 1730]
+    y: [60, 140]
+  logo:
+    x: [2360, 2560]
+    y: [1120, 1198]
+
 world:
   tile_width: auto  # NCC autocorrelation target ~1197 px
 
