@@ -56,3 +56,17 @@ jobs:
 
       - name: Build Docker image
         run: docker build -f docker/Dockerfile -t gnss-agg:ci .
+
+  test-in-container:
+    name: Test in Container
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build image
+        run: docker build -f docker/Dockerfile -t gnss-agg:ci .
+
+      - name: Run tests in container
+        run: |
+          docker run --rm gnss-agg:ci pytest tests/unit/ -v
