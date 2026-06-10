@@ -47,8 +47,15 @@ time:
 
 # Segmentation
 segmentation:
-  expected_segment_count: 135
-  title_diff_threshold: 5.0
+  signal: title_region_frame_diff
+  transition_threshold: 0.5
+  representative_position: 0.55
+
+time_model:
+  origin_utc: "2026-06-09T00:00:00Z"
+  window_lookback_min: 90
+  step_min: 10
+  intro_segment: 0
 
 # Rendering
 rendering:
