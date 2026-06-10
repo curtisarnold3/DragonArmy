@@ -11,7 +11,7 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -30,7 +30,7 @@ jobs:
     name: Enforce Hard Constraints
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: C-1 grep check (no LLM imports in pipeline/)
         run: |
@@ -43,7 +43,7 @@ jobs:
     name: Docker Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Resolve base image digest
         run: docker buildx imagetools inspect python:3.11-slim-bookworm
