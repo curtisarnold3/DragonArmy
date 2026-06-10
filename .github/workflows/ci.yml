@@ -45,5 +45,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve base image digest
+        run: docker buildx imagetools inspect python:3.11-slim-bookworm
+
+      - name: Resolve redis image digest
+        run: docker buildx imagetools inspect redis:7.4-alpine
+
       - name: Build Docker image
         run: docker build -f docker/Dockerfile -t gnss-agg:ci .
