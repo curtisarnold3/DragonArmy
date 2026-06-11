@@ -17,7 +17,7 @@ This repository is the working prototype. It targets a vendor handoff for harden
 ✅ CI: unit tests, constraint guards (no LLM, no web imports), Docker build, in-container tests  
 ✅ `pipeline/render.py` — LUT colormap, gamma, 60% overlay, hourly snapshots  
 ✅ `pipeline/poster.py` — banner, legend, hourly grid, footer, crop  
-🚧 `pipeline/pipeline.py` — CLI orchestrator, progress callbacks  
+✅ `pipeline/pipeline.py` — CLI orchestrator, progress callbacks  
 🚧 `api/` — FastAPI job API (POST /jobs, status, SSE, result download)  
 🚧 `web/` — React + Vite + Tailwind SPA (dropzone → progress → download)
 
@@ -47,7 +47,7 @@ cd gnss-agg
 docker compose up --build
 ```
 
-### Run the CLI (once Slice 7 is complete)
+### Run the CLI
 
 ```bash
 python -m pipeline.pipeline input.mp4 out/
@@ -125,7 +125,7 @@ These are enforced by CI — a PR that violates them will fail automatically.
 
 | Phase             | Goal                                                  | Status               |
 |-------------------|-------------------------------------------------------|----------------------|
-| 1 — CLI core      | Working pipeline end-to-end, golden-master CI green   | 🚧 In progress (Slices 5–7 remaining) |
+| 1 — CLI core      | Working pipeline end-to-end, golden-master CI green   | ✅ Complete — CLI green end to end |
 | 2 — Job API       | FastAPI + RQ + Redis wrapping the CLI                 | ⬜ Not started       |
 | 3 — Frontend      | React SPA: dropzone → progress → download            | ⬜ Not started       |
 | 4 — Deploy        | Publicly reachable instance, demo-ready               | ⬜ Not started       |
