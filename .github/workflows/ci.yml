@@ -76,7 +76,7 @@ jobs:
       - name: Golden master diagnostic
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}/tests:/app/tests \
+            -v ${{ github.workspace }}:/app \
             -e PYTHONPATH=/app \
             -w /app \
             gnss-agg:ci \
