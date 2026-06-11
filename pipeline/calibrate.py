@@ -53,7 +53,7 @@ def build_base_map(
     """Build temporal median base map from cached screenshot
     PNGs. Never re-opens the video. Fast."""
     screenshots_dir = Path(screenshots_dir)
-    all_files = sorted(screenshots_dir.glob("step_*Z.png"))
+    all_files = sorted(screenshots_dir.glob("step_*.png"))
     files = [p for p in all_files]
 
     n = config.get("base_map", {}).get("sample_frames", 45)
