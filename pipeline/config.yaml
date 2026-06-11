@@ -14,7 +14,7 @@ masks:
     y: [1120, 1198]
 
 world:
-  tile_width: auto  # NCC autocorrelation target ~1197 px
+  tile_width: 1197
 
 detection:
   threshold: 14.0  # luminance-weighted diff threshold

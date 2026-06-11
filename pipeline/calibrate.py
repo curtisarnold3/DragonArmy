@@ -1,64 +1,91 @@
 """World map calibration: NCC autocorrelation and temporal median base map."""
 
 import logging
-import cv2
 import numpy as np
+import cv2
+import scipy.signal as ss
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
-def find_world_width(frame: np.ndarray) -> int:
-    """Find horizontal tile-repeat period via NCC autocorrelation."""
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    h = gray.shape[0]
-    strip = gray[h//3 : 2*h//3, :]
-    row = strip.mean(axis=0).astype(np.float64)
-    corr = np.correlate(row, row, mode='full')
-    center = len(row) - 1
-    # Search between 40% and 65% of frame width for the
-    # fundamental period (expected ~half frame width)
-    lo = len(row) * 2 // 5
-    hi = len(row) * 13 // 20
-    search = corr[center + lo : center + hi]
-    peak_offset = int(np.argmax(search))
-    width = peak_offset + lo
-    logger.info(f"World width: {width}px")
-    return width
+def find_world_width(base_map: np.ndarray,
+                     config: dict) -> int:
+    """Measure world tile width via autocorrelation of
+    base map grayscale. Uses scipy.signal.find_peaks with
+    distance=200 to find dominant lag. Falls back to
+    config value if no peak found."""
+
+    # Check config for pinned value
+    tw = config.get("world", {}).get("tile_width", "auto")
+    if tw != "auto":
+        logger.info(f"World width from config: {tw}px")
+        return int(tw)
+
+    # Autocorrelation on equatorial band of base map
+    g = cv2.cvtColor(base_map,
+                     cv2.COLOR_BGR2GRAY).astype(np.float32)
+    band = g[200:900, :].mean(axis=0)
+    band = band - band.mean()
+    ac = np.correlate(band, band, mode='full')
+    ac = ac[ac.size // 2:]
+
+    peaks, _ = ss.find_peaks(ac[200:], distance=200)
+    peaks = peaks + 200
+
+    if len(peaks) == 0:
+        fallback = base_map.shape[1] // 2
+        logger.warning(
+            f"No autocorr peak found; using frame//2={fallback}"
+        )
+        return fallback
+
+    order = np.argsort(ac[peaks])[::-1]
+    top = peaks[order[0]]
+    logger.info(f"World width (autocorr): {top}px")
+    return int(top)
 
 
-def build_base_map(mp4_path, config: dict, frames_dict: dict = None) -> np.ndarray:
-    """Build clean background via per-pixel temporal median with logo paint-out."""
-    from pipeline.probe import probe
-    meta = probe(mp4_path)
-    nb_frames = meta["nb_frames"]
+def build_base_map(
+    screenshots_dir,
+    config: dict,
+) -> np.ndarray:
+    """Build temporal median base map from cached screenshot
+    PNGs. Never re-opens the video. Fast."""
+    import glob
+    screenshots_dir = Path(screenshots_dir)
+    files = sorted(screenshots_dir.glob("step_*Z.png"))
 
     n = config.get("base_map", {}).get("sample_frames", 45)
-    indices = sorted(set(int(i) for i in np.linspace(0, nb_frames - 1, n)))
+    idx = np.linspace(0, len(files) - 1, n).astype(int)
+    sampled = [str(files[i]) for i in idx]
 
-    if frames_dict is not None:
-        frame_list = [frames_dict[i] for i in indices if i in frames_dict]
-    else:
-        from pipeline.grabber import grab_all_frames_sampled
-        fetched = grab_all_frames_sampled(mp4_path, indices, width=meta["width"], height=meta["height"])
-        frame_list = [fetched[i] for i in indices if i in fetched]
-    frames = np.stack(frame_list)
-    base = np.median(frames, axis=0).astype(np.uint8)
+    stack = np.stack(
+        [cv2.imread(f) for f in sampled], axis=0
+    ).astype(np.uint8)
+    base = np.median(stack, axis=0).astype(np.uint8)
+    del stack
 
+    # Paint logo box with surrounding ocean color
     logo = config.get("masks", {}).get("logo")
-    if logo is None:
-        logger.warning("No logo mask in config; skipping paint-out")
-    else:
+    if logo:
         x0, x1 = logo["x"]
         y0, y1 = logo["y"]
         by0 = max(0, y0 - 10)
         by1 = min(base.shape[0], y1 + 10)
         bx0 = max(0, x0 - 10)
         bx1 = min(base.shape[1], x1 + 10)
-        border_region = base[by0:by1, bx0:bx1].copy()
-        border_region[y0-by0:y1-by0, x0-bx0:x1-bx0] = 0
-        mask = border_region.any(axis=2)
-        fill_color = np.median(border_region[mask].reshape(-1, 3), axis=0).astype(np.uint8)
-        base[y0:y1, x0:x1] = fill_color
+        border = base[by0:by1, bx0:bx1].copy()
+        border[y0-by0:y1-by0, x0-bx0:x1-bx0] = 0
+        mask = border.any(axis=2)
+        if mask.any():
+            fill = np.median(
+                border[mask].reshape(-1, 3), axis=0
+            ).astype(np.uint8)
+            base[y0:y1, x0:x1] = fill
 
-    logger.info(f"Base map built from {len(indices)} frames; logo box painted")
+    logger.info(
+        f"Base map from {len(sampled)} screenshots; "
+        f"logo box painted"
+    )
     return base

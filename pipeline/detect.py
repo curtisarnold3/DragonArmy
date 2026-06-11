@@ -31,8 +31,11 @@ def detect_frame(frame: np.ndarray, base_map: np.ndarray, config: dict) -> np.nd
     detected[logo["y"][0]:logo["y"][1], logo["x"][0]:logo["x"][1]] = False
 
     # STEP 5: Fold two world tiles via per-pixel max
-    WW = frame.shape[1] // 2
-    tile_a = detected[:, WW:]
+    WW = config.get("world", {}).get("tile_width", "auto")
+    if WW == "auto":
+        WW = frame.shape[1] // 2
+    WW = int(WW)
+    tile_a = detected[:, WW:2*WW]
     tile_b = detected[:, :WW]
     folded = np.logical_or(tile_a, tile_b)
 
