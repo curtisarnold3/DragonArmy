@@ -1,67 +1,54 @@
-"""Temporary script to capture golden-master values from the reference MP4.
-Run inside the Docker container: python3 tests/integration/run_golden_check.py
-Delete after golden values are confirmed and locked into a proper test.
+"""Golden master diagnostic — runs full pipeline and reports
+key metrics. Run inside Docker container:
+  docker run --rm -v $PWD/tests:/app/tests \
+    -e PYTHONPATH=/app -w /app gnss-agg:ci \
+    python3 tests/integration/run_golden_check.py
 """
-import sys
-import yaml
-import numpy as np
 import logging
+import sys
+from pathlib import Path
+
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
-from pipeline.probe import probe
-from pipeline.calibrate import find_world_width, build_base_map
-from pipeline.segment import (
-    compute_title_diffs, find_segment_boundaries, assign_times
-)
-from pipeline.aggregate import accumulate
-from pipeline.grabber import grab_frame
-
 MP4 = "tests/golden/deep-haerts-video_2026-06-10T15_52_21.682Z.mp4"
+OUT = "/tmp/golden_check_output"
 
-with open("pipeline/config.yaml") as f:
-    config = yaml.safe_load(f)
+if not Path(MP4).exists():
+    print(f"ERROR: Reference MP4 not found at {MP4}")
+    print("Make sure git-lfs has pulled the file.")
+    sys.exit(1)
 
-print("=== PROBE ===")
-meta = probe(MP4)
-print(f"width={meta['width']} height={meta['height']} "
-      f"fps={meta['fps']} nb_frames={meta['nb_frames']}")
+print(f"Running full pipeline on {MP4}")
+print(f"Output dir: {OUT}")
+print()
 
-print("=== CALIBRATE ===")
-mid = grab_frame(MP4, meta["nb_frames"] // 2)
+from pipeline.pipeline import run
 
-import cv2
-gray = cv2.cvtColor(mid, cv2.COLOR_BGR2GRAY)
-h = gray.shape[0]
-strip = gray[h//3 : 2*h//3, :]
-row = strip.mean(axis=0).astype(np.float64)
-corr = np.correlate(row, row, mode='full')
-center = len(row) - 1
-# Print top 5 peaks between 800 and 1600px
-search = corr[center + 800 : center + 1600]
-top5 = np.argsort(search)[-5:][::-1]
-for i in top5:
-    print(f"  lag={i+800} energy={search[i]:.1f}")
+def progress_cb(stage, pct):
+    print(f"  [{pct:3d}%] {stage}")
 
-ww = find_world_width(mid, config)
-print(f"world_width={ww}")
-base = build_base_map(MP4, config)
-print(f"base_map shape={base.shape}")
+result = run(MP4, OUT, progress_callback=progress_cb)
 
-print("=== SEGMENT ===")
-diffs = compute_title_diffs(MP4, config)
-thresh = config["segmentation"]["transition_threshold"]
-bounds = find_segment_boundaries(diffs, thresh)
-segs = assign_times(bounds, config)
-print(f"num_segments={len(segs)}")
-if segs:
-    print(f"first_window={segs[0]['utc_start'].strftime('%H:%MZ')}")
-    print(f"last_window={segs[-1]['utc_start'].strftime('%H:%MZ')}")
+print()
+print("=== GOLDEN MASTER CHECK ===")
+print(f"presence_max:            {result['presence_max']}")
+print(f"total_detection_pixels:  {result['total_detection_pixels']}")
+print()
+print(f"Expected presence_max:           57")
+print(f"Expected total_detection_pixels: 29538")
+print()
 
-print("=== ACCUMULATE ===")
-presence = accumulate(MP4, segs, base, config)
-peak = int(presence.max())
-total = int(presence.sum())
-print(f"max_persistence={peak}")
-print(f"total_detection_pixels={total}")
-print(f"peak_match={'OK' if peak == 57 else 'MISMATCH (expected 57)'}")
-print(f"total_match={'OK' if abs(total - 29538) < 500 else 'MISMATCH (expected ~29538)'}")
+peak_ok = result['presence_max'] == 57
+total_ok = abs(result['total_detection_pixels'] - 29538) < 500
+
+print(f"presence_max match:     {'OK' if peak_ok else 'MISMATCH'}")
+print(f"total_detection match:  {'OK' if total_ok else 'MISMATCH'}")
+
+if peak_ok and total_ok:
+    print()
+    print("GOLDEN MASTER: PASS")
+    sys.exit(0)
+else:
+    print()
+    print("GOLDEN MASTER: FAIL")
+    sys.exit(1)
