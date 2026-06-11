@@ -149,8 +149,9 @@ def _extract_frames(mp4_path, segments, screenshots_dir,
             seg = plan[idx]
             ts = seg["utc_start"].strftime("%H%M")
             te = seg["utc_end"].strftime("%H%M")
-            fname = (f"step_{seg['window_num']:03d}_"
-                     f"{ts}-{te}z.png")
+            step = seg["window_num"] + 1
+            fname = (f"step_{step:03d}_"
+                     f"{ts}-{te}Z.png")
             fpath = screenshots_dir / fname
             cv2.imwrite(str(fpath), frame)
             seg["file"] = fname
