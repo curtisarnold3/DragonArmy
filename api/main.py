@@ -180,7 +180,7 @@ async def job_events(job_id: str, username: str = Depends(verify_credentials)):
 
 
 @app.get("/jobs/{job_id}/result/poster")
-async def get_poster(job_id: str, username: str = Depends(verify_credentials)):
+async def get_poster(job_id: str):
     """Download poster PNG."""
     job = _get_done_job(job_id)
     return FileResponse(
@@ -191,7 +191,7 @@ async def get_poster(job_id: str, username: str = Depends(verify_credentials)):
 
 
 @app.get("/jobs/{job_id}/result/zip")
-async def get_zip(job_id: str, username: str = Depends(verify_credentials)):
+async def get_zip(job_id: str):
     """Download screenshots ZIP."""
     job = _get_done_job(job_id)
     return FileResponse(
