@@ -14,6 +14,20 @@ from fastapi.responses import FileResponse, StreamingResponse
 logger = logging.getLogger(__name__)
 app = FastAPI(title="GNSS Spoofing Aggregator API")
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://totaleclipseoftheheatmap.com",
+        "https://www.totaleclipseoftheheatmap.com",
+        "http://localhost:5173",   # local dev
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # In-memory job store (MVP — replace with Redis at Slice 8 hardening)
 jobs: dict[str, dict] = {}
 
