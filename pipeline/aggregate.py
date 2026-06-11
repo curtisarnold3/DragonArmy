@@ -9,23 +9,14 @@ from scipy.ndimage import uniform_filter1d
 logger = logging.getLogger(__name__)
 
 
-def accumulate(
-    screenshots_dir,
-    segments: list[dict],
-    base_map: np.ndarray,
-    config: dict,
-) -> np.ndarray:
-    """Accumulate per-pixel window counts from cached PNGs.
-    Never re-opens the video. One cv2.imread per segment."""
+def accumulate(screenshots_dir, segments, base_map, config):
+    """Accumulate presence using proven working logic."""
     from pipeline.detect import detect_frame
+    from pathlib import Path
 
-    WW = config["world"]["tile_width"]
-    if WW == "auto":
-        WW = base_map.shape[1] // 2
-    WW = int(WW)
-
+    WW = int(config["world"]["tile_width"])
     H = base_map.shape[0]
-    presence = np.zeros((H, WW), dtype=np.uint16)
+    presence = np.zeros((H, WW), dtype=np.int32)
 
     screenshots_dir = Path(screenshots_dir)
 
@@ -37,11 +28,11 @@ def accumulate(
         if not fpath.exists():
             logger.warning(f"Missing: {fpath}")
             continue
-        frame = cv2.imread(str(fpath))
-        if frame is None:
+        fr = cv2.imread(str(fpath))
+        if fr is None:
             continue
-        detected = detect_frame(frame, base_map, config)
-        presence += detected.astype(np.uint16)
+        mask = detect_frame(fr, base_map, config)
+        presence += mask.astype(np.int32)
 
     total = int(presence.sum())
     peak = int(presence.max())
@@ -50,7 +41,7 @@ def accumulate(
         f"max_persistence={peak}, "
         f"total_detection_pixels={total}"
     )
-    return presence
+    return presence.astype(np.uint16)
 
 
 def seam_roll(
