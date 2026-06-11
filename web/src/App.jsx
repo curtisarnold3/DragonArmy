@@ -38,46 +38,6 @@ export default function App() {
     } else {
       setAuthed(true)
       setAuthError(false)
-
-      // Total Eclipse of the Heart easter egg
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext
-        if (AudioCtx) {
-          const ctx = new AudioCtx()
-          const notes = [
-            // "Turn a-round bright eyes"
-            [622.25, 0.0,  0.3 ],  // Eb5
-            [622.25, 0.3,  0.15],  // Eb5
-            [698.46, 0.45, 0.3 ],  // F5
-            [622.25, 0.75, 0.3 ],  // Eb5
-            [830.61, 1.05, 0.6 ],  // Ab5
-            // "ev-ery now and then I fall a-"
-            [783.99, 1.7,  0.2 ],  // G5
-            [740.00, 1.9,  0.2 ],  // F#5
-            [698.46, 2.1,  0.2 ],  // F5
-            [622.25, 2.3,  0.2 ],  // Eb5
-            [587.33, 2.5,  0.2 ],  // D5
-            [554.37, 2.7,  0.2 ],  // Db5
-            [523.25, 2.9,  0.2 ],  // C5
-            // "part"
-            [466.16, 3.1,  0.8 ],  // Bb4
-          ]
-          notes.forEach(([freq, start, dur]) => {
-            const osc = ctx.createOscillator()
-            const gain = ctx.createGain()
-            osc.connect(gain)
-            gain.connect(ctx.destination)
-            osc.type = 'sine'
-            osc.frequency.value = freq
-            gain.gain.setValueAtTime(0.4, ctx.currentTime + start)
-            gain.gain.exponentialRampToValueAtTime(
-              0.001, ctx.currentTime + start + dur
-            )
-            osc.start(ctx.currentTime + start)
-            osc.stop(ctx.currentTime + start + dur + 0.1)
-          })
-        }
-      } catch(e) {}
     }
   }
 
