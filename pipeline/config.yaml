@@ -49,6 +49,7 @@ time:
 segmentation:
   signal: title_region_frame_diff
   transition_threshold: 0.5
+  title_diff_threshold: 8.0
   representative_position: 0.55
 
 time_model:
