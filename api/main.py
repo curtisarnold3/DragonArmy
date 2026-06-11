@@ -66,7 +66,10 @@ async def create_job(file: UploadFile = File(...), background_tasks: BackgroundT
         raise HTTPException(400, "Only MP4 files accepted")
 
     # Create temp directory for this job's work
-    work_dir = tempfile.mkdtemp(prefix="gnss_job_")
+    if os.path.exists("/data/jobs"):
+        work_dir = tempfile.mkdtemp(prefix="gnss_job_", dir="/data/jobs")
+    else:
+        work_dir = tempfile.mkdtemp(prefix="gnss_job_")
 
     # Save uploaded file
     input_path = Path(work_dir) / "input.mp4"
