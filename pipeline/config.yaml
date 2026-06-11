@@ -88,6 +88,11 @@ render:
 hourly:
   cadence_steps: 6
 
+poster:
+  crop:
+    y_top: 150
+    y_bottom: 1070
+
 # Audit / validation values (for golden-master tests)
 audit:
   max_persistence: 57  # max window count observed in reference MP4

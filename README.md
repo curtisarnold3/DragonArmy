@@ -16,7 +16,7 @@ This repository is the working prototype. It targets a vendor handoff for harden
 ✅ Pinned dependencies, digest-pinned base image, bundled fonts  
 ✅ CI: unit tests, constraint guards (no LLM, no web imports), Docker build, in-container tests  
 ✅ `pipeline/render.py` — LUT colormap, gamma, 60% overlay, hourly snapshots  
-🚧 `pipeline/poster.py` — banner, legend, hourly grid, footer, crop  
+✅ `pipeline/poster.py` — banner, legend, hourly grid, footer, crop  
 🚧 `pipeline/pipeline.py` — CLI orchestrator, progress callbacks  
 🚧 `api/` — FastAPI job API (POST /jobs, status, SSE, result download)  
 🚧 `web/` — React + Vite + Tailwind SPA (dropzone → progress → download)
