@@ -24,9 +24,11 @@ def test_run_calls_progress_callback():
          patch("pipeline.segment.find_segment_boundaries", return_value=[0, 10, 20]), \
          patch("pipeline.segment.assign_times", return_value=[
              {"index": 1, "window_num": 0, "start_frame": 0, "end_frame": 10,
+              "rep_frame": 5,
               "utc_start": datetime.datetime(2026, 6, 9, 0, 0, tzinfo=datetime.timezone.utc),
               "utc_end": datetime.datetime(2026, 6, 9, 1, 30, tzinfo=datetime.timezone.utc)}
          ]), \
+         patch("pipeline.pipeline._extract_frames"), \
          patch("pipeline.aggregate.accumulate", return_value=np.zeros((10, 10), dtype=np.uint16)), \
          patch("pipeline.aggregate.seam_roll", return_value=(
              np.zeros((10, 10), dtype=np.uint16),
@@ -59,9 +61,11 @@ def test_run_returns_expected_keys():
          patch("pipeline.segment.find_segment_boundaries", return_value=[0, 10, 20]), \
          patch("pipeline.segment.assign_times", return_value=[
              {"index": 1, "window_num": 0, "start_frame": 0, "end_frame": 10,
+              "rep_frame": 5,
               "utc_start": datetime.datetime(2026, 6, 9, 0, 0, tzinfo=datetime.timezone.utc),
               "utc_end": datetime.datetime(2026, 6, 9, 1, 30, tzinfo=datetime.timezone.utc)}
          ]), \
+         patch("pipeline.pipeline._extract_frames"), \
          patch("pipeline.aggregate.accumulate", return_value=np.zeros((10, 10), dtype=np.uint16)), \
          patch("pipeline.aggregate.seam_roll", return_value=(
              np.zeros((10, 10), dtype=np.uint16),

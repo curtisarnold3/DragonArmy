@@ -54,7 +54,7 @@ def build_base_map(
     PNGs. Never re-opens the video. Fast."""
     import glob
     screenshots_dir = Path(screenshots_dir)
-    files = sorted(screenshots_dir.glob("step_*Z.png"))
+    files = list(sorted(screenshots_dir.glob("step_*Z.png")))
 
     n = config.get("base_map", {}).get("sample_frames", 45)
     idx = np.linspace(0, len(files) - 1, n).astype(int)
