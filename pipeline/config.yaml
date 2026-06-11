@@ -73,6 +73,21 @@ colormap:
     - [24, [255, 128, 0]]      # 24 windows = orange
     - [57, [255, 0, 0]]        # 57 windows = red (max observed)
 
+# Rendering
+render:
+  colormap:
+    - [0.00, [43, 212, 255]]
+    - [0.28, [70, 255, 140]]
+    - [0.52, [255, 226, 74]]
+    - [0.74, [255, 138, 43]]
+    - [0.90, [255, 55, 55]]
+    - [1.00, [255, 235, 235]]
+  gamma: 0.7
+  overlay_alpha: 0.6
+
+hourly:
+  cadence_steps: 6
+
 # Audit / validation values (for golden-master tests)
 audit:
   max_persistence: 57  # max window count observed in reference MP4
