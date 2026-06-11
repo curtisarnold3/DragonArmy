@@ -58,6 +58,13 @@ def verify_credentials(
 jobs: dict[str, dict] = {}
 
 
+@app.get("/jobs/healthcheck")
+async def healthcheck(
+    username: str = Depends(verify_credentials)
+):
+    return {"status": "ok", "user": username}
+
+
 @app.post("/jobs")
 async def create_job(file: UploadFile = File(...), background_tasks: BackgroundTasks = None, username: str = Depends(verify_credentials)):
     """Create a new job from uploaded MP4."""
