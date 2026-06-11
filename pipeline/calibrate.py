@@ -52,7 +52,6 @@ def build_base_map(
 ) -> np.ndarray:
     """Build temporal median base map from cached screenshot
     PNGs. Never re-opens the video. Fast."""
-    import glob
     screenshots_dir = Path(screenshots_dir)
     files = list(sorted(screenshots_dir.glob("step_*Z.png")))
 

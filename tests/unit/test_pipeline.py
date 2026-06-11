@@ -44,7 +44,7 @@ def test_run_calls_progress_callback():
             result = run("dummy.mp4", tmp, progress_callback=fake_cb)
 
     assert len(calls) > 0
-    assert calls[0][0] == "probe"
+    assert calls[0][0] == "segment"
     assert calls[-1][0] == "done"
     assert calls[-1][1] == 100
 
