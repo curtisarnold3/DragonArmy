@@ -9,6 +9,8 @@ const STAGES = [
   'compose', 'save', 'zip', 'done'
 ]
 
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
 export default function App() {
   const [jobId, setJobId] = useState(null)
   const [status, setStatus] = useState('idle')
@@ -24,7 +26,7 @@ export default function App() {
     formData.append('file', file)
 
     try {
-      const res = await fetch('/jobs', {
+      const res = await fetch(`${API_BASE}/jobs`, {
         method: 'POST',
         body: formData,
       })
@@ -40,7 +42,7 @@ export default function App() {
   }
 
   function pollJob(id) {
-    const es = new EventSource(`/jobs/${id}/events`)
+    const es = new EventSource(`${API_BASE}/jobs/${id}/events`)
     es.onmessage = (e) => {
       const data = JSON.parse(e.data)
       setStage(data.stage)
@@ -58,7 +60,7 @@ export default function App() {
       es.close()
       // Fall back to polling
       const interval = setInterval(async () => {
-        const res = await fetch(`/jobs/${id}`)
+        const res = await fetch(`${API_BASE}/jobs/${id}`)
         const data = await res.json()
         setStage(data.stage)
         setPercent(data.percent)
