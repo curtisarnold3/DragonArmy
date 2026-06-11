@@ -142,7 +142,7 @@ export default function App() {
           )}
 
           {status === 'done' && (
-            <ResultPanel jobId={jobId} />
+            <ResultPanel jobId={jobId} apiBase={API_BASE} />
           )}
 
           {status === 'error' && (
