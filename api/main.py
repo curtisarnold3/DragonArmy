@@ -5,11 +5,14 @@ import asyncio
 import logging
 import tempfile
 import json
+import os
+import secrets
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Depends
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 logger = logging.getLogger(__name__)
 app = FastAPI(title="GNSS Spoofing Aggregator API")
@@ -28,12 +31,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+security = HTTPBasic()
+
+def verify_credentials(
+    credentials: HTTPBasicCredentials = Depends(security)
+):
+    username = os.environ.get("API_USERNAME", "gnss")
+    password = os.environ.get("API_PASSWORD", "changeme")
+    correct_user = secrets.compare_digest(
+        credentials.username.encode("utf8"),
+        username.encode("utf8")
+    )
+    correct_pass = secrets.compare_digest(
+        credentials.password.encode("utf8"),
+        password.encode("utf8")
+    )
+    if not (correct_user and correct_pass):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
 # In-memory job store (MVP — replace with Redis at Slice 8 hardening)
 jobs: dict[str, dict] = {}
 
 
 @app.post("/jobs")
-async def create_job(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def create_job(file: UploadFile = File(...), background_tasks: BackgroundTasks = None, username: str = Depends(verify_credentials)):
     """Create a new job from uploaded MP4."""
     # Validate file is MP4
     if not file.filename.endswith(".mp4"):
@@ -102,7 +128,7 @@ def _run_pipeline(job_id: str):
 
 
 @app.get("/jobs/{job_id}")
-async def get_job(job_id: str):
+async def get_job(job_id: str, username: str = Depends(verify_credentials)):
     """Get job status."""
     if job_id not in jobs:
         raise HTTPException(404, "Job not found")
@@ -117,7 +143,7 @@ async def get_job(job_id: str):
 
 
 @app.get("/jobs/{job_id}/events")
-async def job_events(job_id: str):
+async def job_events(job_id: str, username: str = Depends(verify_credentials)):
     """Server-sent events stream for job progress."""
     if job_id not in jobs:
         raise HTTPException(404, "Job not found")
@@ -144,7 +170,7 @@ async def job_events(job_id: str):
 
 
 @app.get("/jobs/{job_id}/result/poster")
-async def get_poster(job_id: str):
+async def get_poster(job_id: str, username: str = Depends(verify_credentials)):
     """Download poster PNG."""
     job = _get_done_job(job_id)
     return FileResponse(
@@ -155,7 +181,7 @@ async def get_poster(job_id: str):
 
 
 @app.get("/jobs/{job_id}/result/zip")
-async def get_zip(job_id: str):
+async def get_zip(job_id: str, username: str = Depends(verify_credentials)):
     """Download screenshots ZIP."""
     job = _get_done_job(job_id)
     return FileResponse(
