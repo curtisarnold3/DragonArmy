@@ -56,6 +56,12 @@ def build_base_map(
     all_files = sorted(screenshots_dir.glob("step_*.png"))
     files = [p for p in all_files]
 
+    if not files:
+        raise ValueError(
+            f"No screenshot PNGs found in {screenshots_dir}. "
+            "Run _extract_frames() before build_base_map()."
+        )
+
     n = config.get("base_map", {}).get("sample_frames", 45)
     n = min(n, len(files))
     idx = np.linspace(0, len(files) - 1, n).astype(int)
