@@ -10,9 +10,14 @@ logger = logging.getLogger(__name__)
 
 def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dict, grab_frame_fn=None) -> np.ndarray:
     """Return uint16 (H, WW) array counting detections per pixel across all windows."""
+    from pipeline.probe import probe
+    meta = probe(mp4_path)
+
     if grab_frame_fn is None:
-        from pipeline.grabber import grab_frame
-        grab_frame_fn = grab_frame
+        from pipeline.grabber import grab_frame as _grab
+        def _grab_with_dims(path, idx):
+            return _grab(path, idx, width=meta["width"], height=meta["height"])
+        grab_frame_fn = _grab_with_dims
 
     H = base_map.shape[0]
     WW = base_map.shape[1] // 2

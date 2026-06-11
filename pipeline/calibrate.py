@@ -24,12 +24,14 @@ def find_world_width(frame: np.ndarray) -> int:
 
 def build_base_map(mp4_path, world_width: int, config: dict, grab_frame_fn=None) -> np.ndarray:
     """Build clean background via per-pixel temporal median with logo paint-out."""
-    if grab_frame_fn is None:
-        from pipeline.grabber import grab_frame
-        grab_frame_fn = grab_frame
-
     from pipeline.probe import probe
     meta = probe(mp4_path)
+
+    if grab_frame_fn is None:
+        from pipeline.grabber import grab_frame as _grab
+        def _grab_with_dims(path, idx):
+            return _grab(path, idx, width=meta["width"], height=meta["height"])
+        grab_frame_fn = _grab_with_dims
     nb_frames = meta["nb_frames"]
     height = meta["height"]
     width_px = meta["width"]
