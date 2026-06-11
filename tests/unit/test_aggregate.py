@@ -32,7 +32,7 @@ def test_accumulate_shape_and_dtype(cfg):
     fake_meta = {"width": 20, "height": 10}
 
     with patch("pipeline.probe.probe", return_value=fake_meta):
-        with patch("pipeline.grabber.grab_frames_batch", return_value={5: fake_frame}):
+        with patch("pipeline.grabber.grab_all_frames_sampled", return_value={5: fake_frame}):
             result = accumulate("dummy.mp4", segments, base, cfg)
 
     assert result.shape == (10, 10)
@@ -52,7 +52,7 @@ def test_accumulate_counts_detections(cfg):
     fake_meta = {"width": 20, "height": 10}
 
     with patch("pipeline.probe.probe", return_value=fake_meta):
-        with patch("pipeline.grabber.grab_frames_batch", return_value={5: bright, 15: bright}):
+        with patch("pipeline.grabber.grab_all_frames_sampled", return_value={5: bright, 15: bright}):
             result = accumulate("dummy.mp4", segments, base, cfg)
 
     assert result[5, 5] == 2

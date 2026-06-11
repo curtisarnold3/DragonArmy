@@ -31,8 +31,8 @@ def build_base_map(mp4_path, world_width: int, config: dict) -> np.ndarray:
     n = config.get("base_map", {}).get("sample_frames", 45)
     indices = sorted(set(int(i) for i in np.linspace(0, nb_frames - 1, n)))
 
-    from pipeline.grabber import grab_frames_batch
-    frames_dict = grab_frames_batch(mp4_path, indices, width=meta["width"], height=meta["height"])
+    from pipeline.grabber import grab_all_frames_sampled
+    frames_dict = grab_all_frames_sampled(mp4_path, indices, width=meta["width"], height=meta["height"])
     frame_list = [frames_dict[i] for i in indices if i in frames_dict]
     frames = np.stack(frame_list)
     base = np.median(frames, axis=0).astype(np.uint8)

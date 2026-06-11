@@ -59,3 +59,33 @@ def grab_frames_batch(mp4_path, frame_indices: list[int], width: int = None, hei
 
     logger.info(f"Batch extracted {len(frames)} frames in one ffmpeg pass")
     return frames
+
+
+def grab_all_frames_sampled(mp4_path, sample_indices: list[int], width: int, height: int) -> dict:
+    """Stream all frames from ffmpeg, keep only the sampled ones.
+    One ffmpeg pass, no seeking. Much faster than select= filter."""
+    frame_size = height * width * 3
+    wanted = set(sample_indices)
+    frames = {}
+
+    cmd = [
+        "ffmpeg", "-i", str(mp4_path),
+        "-f", "rawvideo", "-pix_fmt", "bgr24",
+        "pipe:1"
+    ]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    idx = 0
+    while True:
+        chunk = proc.stdout.read(frame_size)
+        if len(chunk) < frame_size:
+            break
+        if idx in wanted:
+            frames[idx] = np.frombuffer(chunk, dtype=np.uint8).reshape((height, width, 3)).copy()
+            if len(frames) == len(wanted):
+                proc.stdout.close()
+                proc.wait()
+                break
+        idx += 1
+    proc.wait()
+    logger.info(f"Streamed {idx+1} frames, kept {len(frames)}")
+    return frames

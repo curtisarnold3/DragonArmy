@@ -32,9 +32,9 @@ def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dic
         rep_indices.append((seg, idx))
 
     # Phase 2: Batch extract all frames
-    from pipeline.grabber import grab_frames_batch
+    from pipeline.grabber import grab_all_frames_sampled
     all_idx = [idx for _, idx in rep_indices]
-    frames_dict = grab_frames_batch(mp4_path, all_idx, width=meta["width"], height=meta["height"])
+    frames_dict = grab_all_frames_sampled(mp4_path, all_idx, width=meta["width"], height=meta["height"])
 
     # Phase 3: Accumulate detections
     for seg, idx in rep_indices:
