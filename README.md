@@ -18,6 +18,7 @@ This repository is the working prototype. It targets a vendor handoff for harden
 ✅ `pipeline/render.py` — LUT colormap, gamma, 60% overlay, hourly snapshots  
 ✅ `pipeline/poster.py` — banner, legend, hourly grid, footer, crop  
 ✅ `pipeline/pipeline.py` — CLI orchestrator, progress callbacks  
+✅ Two-pass cv2 architecture — sequential decode, no seeking, cached PNGs  
 ✅ `api/` — FastAPI job API (POST /jobs, GET /jobs/{id}, SSE, result download)  
 ✅ `web/` — React + Vite + Tailwind SPA (dropzone → progress → download)
 
@@ -79,6 +80,18 @@ Produces `out/poster.png` and `out/screenshots.zip`.
 | Compose    | `poster.py`    | Banner, legend, hourly grid, footer, crop 🚧                           |
 | Orchestrate| `pipeline.py`  | CLI entry point, progress callbacks 🚧                                 |
 
+## Performance
+
+The pipeline decodes the source video exactly twice:
+
+**Pass 1** — sequential decode via `cv2.VideoCapture`, reading only the title region crop (87×6px per frame) to detect segment boundaries. Costs almost nothing.
+
+**Pass 2** — sequential decode, writing only the ~135 representative frames to disk as PNGs. Skips ~97% of disk writes.
+
+All subsequent stages (base map, accumulation, hourly snapshots) read from those cached PNGs via `cv2.imread`. The video is never re-opened after Pass 2.
+
+This keeps peak memory under ~1.5 GB and total wall time under 10 minutes on a 2-vCPU container.
+
 ## Project layout
 
 ```
@@ -125,10 +138,10 @@ These are enforced by CI — a PR that violates them will fail automatically.
 
 | Phase             | Goal                                                  | Status               |
 |-------------------|-------------------------------------------------------|----------------------|
-| 1 — CLI core      | Working pipeline end-to-end, golden-master CI green   | ✅ Complete — CLI green end to end |
-| 2 — Job API       | FastAPI + RQ + Redis wrapping the CLI                 | 🚧 In progress (Slice 8 complete — hardening to RQ pending) |
-| 3 — Frontend      | React SPA: dropzone → progress → download            | 🚧 In progress (Slice 9 complete) |
-| 4 — Deploy        | Publicly reachable instance, demo-ready               | ⬜ Not started       |
+| 1 — CLI core      | Working pipeline end-to-end, golden-master CI green   | ✅ Complete — CLI green, two-pass cv2 architecture |
+| 2 — Job API       | FastAPI + RQ + Redis wrapping the CLI                 | 🚧 In progress — API complete, deployment in progress |
+| 3 — Frontend      | React SPA: dropzone → progress → download            | 🚧 In progress — React SPA complete, pending deployment |
+| 4 — Deploy        | Publicly reachable instance, demo-ready               | 🚧 In progress — Fly.io + Vercel setup underway |
 | 5 — Handoff       | CONTRACTS.md, recorded walkthrough, docs current      | ⬜ Not started       |
 
 Each phase ends with a demonstrable artifact. Transition to a hardening vendor can occur at any phase boundary.
