@@ -15,7 +15,8 @@ def test_find_world_width_on_tiled_frame():
         tile[:, x, :] = int(128 + 127 * np.sin(x * 2 * np.pi / 300))
     frame = np.concatenate([tile, tile], axis=1)  # shape: (100, 600, 3)
 
-    result = find_world_width(frame)
+    config = {"world": {"tile_width": "auto"}}
+    result = find_world_width(frame, config)
     assert abs(result - 300) <= 20
 
 
@@ -26,41 +27,39 @@ def test_find_world_width_returns_int():
         tile[:, x, :] = int(128 + 127 * np.sin(x * 2 * np.pi / 300))
     frame = np.concatenate([tile, tile], axis=1)
 
-    assert isinstance(find_world_width(frame), int)
+    config = {"world": {"tile_width": "auto"}}
+    assert isinstance(find_world_width(frame, config), int)
 
 
-def test_build_base_map_shape_and_dtype():
+def test_build_base_map_shape_and_dtype(tmp_path):
     """Build base map returns correct shape and dtype."""
+    import cv2
     fake_frame = np.zeros((100, 200, 3), dtype=np.uint8)
-
-    fake_meta = {"nb_frames": 10, "width": 200, "height": 100}
+    for i in range(5):
+        cv2.imwrite(str(tmp_path / f"step_{i:03d}_0000-0130z.png"), fake_frame)
 
     cfg = {"base_map": {"sample_frames": 5}, "masks": {}}
-
-    with patch("pipeline.probe.probe", return_value=fake_meta):
-        with patch("pipeline.grabber.grab_all_frames_sampled", return_value={i: fake_frame for i in range(5)}):
-            result = build_base_map("dummy.mp4", cfg)
+    result = build_base_map(tmp_path, cfg)
 
     assert result.shape == (100, 200, 3)
     assert result.dtype == np.uint8
 
 
-def test_build_base_map_logo_paintout():
+def test_build_base_map_logo_paintout(tmp_path):
     """Build base map paints out logo region."""
+    import cv2
     # Create frame with logo area having different value (200) than surroundings (100)
     fake_frame = np.ones((100, 200, 3), dtype=np.uint8) * 100
     fake_frame[50:100, 150:200] = 200  # Logo area is brighter
 
-    fake_meta = {"nb_frames": 10, "width": 200, "height": 100}
+    for i in range(5):
+        cv2.imwrite(str(tmp_path / f"step_{i:03d}_0000-0130z.png"), fake_frame.copy())
 
     cfg = {
         "base_map": {"sample_frames": 5},
         "masks": {"logo": {"x": [150, 200], "y": [50, 100]}}
     }
-
-    with patch("pipeline.probe.probe", return_value=fake_meta):
-        with patch("pipeline.grabber.grab_all_frames_sampled", return_value={i: fake_frame.copy() for i in range(5)}):
-            result = build_base_map("dummy.mp4", cfg)
+    result = build_base_map(tmp_path, cfg)
 
     # Logo region should be painted with border median (close to 100, not 200)
     logo_region = result[50:100, 150:200]

@@ -11,37 +11,42 @@ def test_find_segment_boundaries_detects_spikes():
     """Find segment boundaries detects spikes above threshold."""
     diffs = np.array([0.1, 0.2, 5.0, 0.1, 0.1, 6.0, 0.2])
     boundaries = find_segment_boundaries(diffs, threshold=0.5)
-    assert 0 in boundaries
-    assert 3 in boundaries
-    assert 6 in boundaries
+    # boundaries is now list of (start, end) tuples
+    starts = [s for s, e in boundaries]
+    assert 0 in starts
+    assert 3 in starts
+    assert 6 in starts
 
 
 def test_find_segment_boundaries_no_spikes():
     """Find segment boundaries with no spikes returns only initial boundary."""
     diffs = np.array([0.1, 0.2, 0.1, 0.3])
     boundaries = find_segment_boundaries(diffs, threshold=0.5)
-    assert boundaries == [0]
+    assert len(boundaries) == 1
+    assert boundaries[0] == (0, len(diffs))
 
 
 def test_find_segment_boundaries_returns_sorted():
     """Find segment boundaries returns sorted list."""
     diffs = np.array([0.1, 6.0, 0.1, 5.0, 0.1])
     boundaries = find_segment_boundaries(diffs, threshold=0.5)
-    assert boundaries == sorted(boundaries)
+    starts = [s for s, e in boundaries]
+    assert starts == sorted(starts)
 
 
 def test_assign_times_first_window():
     """Assign times correctly labels first window."""
-    boundaries = [0, 10, 20, 30]
+    seg_tuples = [(0, 10), (10, 20), (20, 30), (30, 40)]
     config = {
         "time_model": {
             "origin_utc": "2026-06-09T00:00:00Z",
             "window_lookback_min": 90,
             "step_min": 10,
             "intro_segment": 0,
-        }
+        },
+        "segmentation": {"representative_position": 0.55}
     }
-    segments = assign_times(boundaries, config)
+    segments = assign_times(seg_tuples, config)
 
     first = segments[0]
     expected_start = datetime(2026, 6, 9, 0, 0, tzinfo=timezone.utc)
@@ -51,16 +56,17 @@ def test_assign_times_first_window():
 
 def test_assign_times_skips_intro():
     """Assign times skips intro segment."""
-    boundaries = [0, 10, 20, 30]
+    seg_tuples = [(0, 10), (10, 20), (20, 30), (30, 40)]
     config = {
         "time_model": {
             "origin_utc": "2026-06-09T00:00:00Z",
             "window_lookback_min": 90,
             "step_min": 10,
             "intro_segment": 0,
-        }
+        },
+        "segmentation": {"representative_position": 0.55}
     }
-    segments = assign_times(boundaries, config)
+    segments = assign_times(seg_tuples, config)
 
     indices = [s["index"] for s in segments]
     assert 0 not in indices
