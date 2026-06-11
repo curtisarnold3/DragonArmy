@@ -7,36 +7,31 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def detect_frame(frame: np.ndarray, base_map: np.ndarray, config: dict) -> np.ndarray:
-    """Return boolean (H, WW) array where True = detection."""
-    # STEP 1: Compute luminance-weighted diff
-    diff = frame.astype(np.int16) - base_map.astype(np.int16)
-    luminance = (
-        0.114 * diff[:, :, 0] +
-        0.587 * diff[:, :, 1] +
-        0.299 * diff[:, :, 2]
-    )
-    luminance = np.clip(luminance, 0, None).astype(np.float32)
+def detect_frame(frame, base_map, config):
+    """Isolate detections using proven working logic."""
+    WW = int(config["world"]["tile_width"])
+    H = base_map.shape[0]
+    Wfull = base_map.shape[1]
+    thr = config["detection"]["threshold"]
 
-    # STEP 2: Threshold positive luminance increases
-    threshold = config["detection"]["threshold"]
-    detected = luminance > threshold
+    base = base_map.astype(np.int16)
+    diff = frame.astype(np.int16) - base
+    bl = (0.114*diff[:,:,0] +
+          0.587*diff[:,:,1] +
+          0.299*diff[:,:,2])
+    binc = np.clip(bl, 0, None).astype(np.float32)
 
-    # STEP 3: Zero out title mask
+    # Mask overlays
     title = config["masks"]["title"]
-    detected[title["y"][0]:title["y"][1], title["x"][0]:title["x"][1]] = False
-
-    # STEP 4: Zero out logo mask
     logo = config["masks"]["logo"]
-    detected[logo["y"][0]:logo["y"][1], logo["x"][0]:logo["x"][1]] = False
+    binc[title["y"][0]:title["y"][1],
+         title["x"][0]:title["x"][1]] = 0
+    binc[logo["y"][0]:logo["y"][1],
+         logo["x"][0]:logo["x"][1]] = 0
 
-    # STEP 5: Fold two world tiles via per-pixel max
-    WW = config.get("world", {}).get("tile_width", "auto")
-    if WW == "auto":
-        WW = frame.shape[1] // 2
-    WW = int(WW)
-    tile_a = detected[:, WW:2*WW]
-    tile_b = detected[:, :WW]
-    folded = np.logical_or(tile_a, tile_b)
+    # Fold two world copies via per-pixel max
+    A = binc[:, WW:2*WW]
+    B = binc[:, 0:WW]
+    wbinc = np.maximum(A, B)
 
-    return folded
+    return wbinc > thr
