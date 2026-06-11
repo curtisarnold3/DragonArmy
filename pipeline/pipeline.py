@@ -49,22 +49,44 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
     mid = grab_frame(mp4_path, meta["nb_frames"] // 2, width=meta["width"], height=meta["height"])
     world_width = find_world_width(mid)
 
-    # Step 3: Build base map
-    progress("base_map", 20)
-    from pipeline.calibrate import build_base_map
-    base_map = build_base_map(mp4_path, config)
-
-    # Step 4: Compute title diffs
-    progress("segment", 30)
+    # Step 3: Compute title diffs
+    progress("segment", 20)
     from pipeline.segment import compute_title_diffs, find_segment_boundaries, assign_times
     diffs = compute_title_diffs(mp4_path, config)
 
-    # Step 5: Find boundaries + assign times
-    progress("segment", 35)
+    # Step 4: Find boundaries + assign times
+    progress("segment", 25)
     threshold = config["segmentation"]["transition_threshold"]
     boundaries = find_segment_boundaries(diffs, threshold)
     segments = assign_times(boundaries, config)
     logger.info(f"Found {len(segments)} segments")
+
+    # Step 5: Prefetch all frames in one pass
+    progress("prefetch", 30)
+    from pipeline.grabber import grab_all_frames_sampled
+
+    # Base map indices: 45 evenly spaced frames
+    n_samples = config.get("base_map", {}).get("sample_frames", 45)
+    base_indices = sorted(set(int(i) for i in np.linspace(0, meta["nb_frames"]-1, n_samples)))
+
+    # Representative frame indices for all segments
+    rep_pos = config["segmentation"]["representative_position"]
+    rep_indices = []
+    for seg in segments:
+        if seg["end_frame"] is None:
+            continue
+        idx = int(seg["start_frame"] + (seg["end_frame"] - seg["start_frame"]) * rep_pos)
+        rep_indices.append(idx)
+
+    # Combine and fetch once
+    all_indices = sorted(set(base_indices + rep_indices))
+    prefetched_frames = grab_all_frames_sampled(mp4_path, all_indices, width=meta["width"], height=meta["height"])
+    logger.info(f"Prefetched {len(all_indices)} frames in one pass")
+
+    # Step 6: Build base map
+    progress("base_map", 60)
+    from pipeline.calibrate import build_base_map
+    base_map = build_base_map(mp4_path, config, frames_dict=prefetched_frames)
 
     # Step 6: Save screenshots
     progress("screenshots", 40)
@@ -82,12 +104,12 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
         progress("screenshots", pct)
 
     # Step 7: Accumulate
-    progress("detect", 50)
+    progress("detect", 70)
     from pipeline.aggregate import accumulate, seam_roll
-    presence = accumulate(mp4_path, segments, base_map, config)
+    presence = accumulate(mp4_path, segments, base_map, config, frames_dict=prefetched_frames)
 
     # Step 8: Seam roll
-    progress("seam_roll", 70)
+    progress("seam_roll", 75)
     rolled_presence, rolled_bg, roll_offset = seam_roll(presence, base_map, config)
 
     # Step 9: Render hero

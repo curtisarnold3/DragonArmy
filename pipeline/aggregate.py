@@ -8,7 +8,7 @@ from scipy.ndimage import uniform_filter1d
 logger = logging.getLogger(__name__)
 
 
-def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dict) -> np.ndarray:
+def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dict, frames_dict: dict = None) -> np.ndarray:
     """Return uint16 (H, WW) array counting detections per pixel across all windows."""
     from pipeline.probe import probe
     meta = probe(mp4_path)
@@ -32,15 +32,18 @@ def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dic
         rep_indices.append((seg, idx))
 
     # Phase 2: Batch extract all frames
-    from pipeline.grabber import grab_all_frames_sampled
-    all_idx = [idx for _, idx in rep_indices]
-    frames_dict = grab_all_frames_sampled(mp4_path, all_idx, width=meta["width"], height=meta["height"])
+    if frames_dict is not None:
+        fetched = frames_dict
+    else:
+        from pipeline.grabber import grab_all_frames_sampled
+        all_idx = [idx for _, idx in rep_indices]
+        fetched = grab_all_frames_sampled(mp4_path, all_idx, width=meta["width"], height=meta["height"])
 
     # Phase 3: Accumulate detections
     for seg, idx in rep_indices:
-        if idx not in frames_dict:
+        if idx not in fetched:
             continue
-        frame = frames_dict[idx]
+        frame = fetched[idx]
         detected = detect_frame(frame, base_map, config)
         presence += detected.astype(np.uint16)
 
