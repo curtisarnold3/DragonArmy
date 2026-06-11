@@ -5,7 +5,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from api.main import app
 
-client = TestClient(app)
+client = TestClient(app, auth=("gnss", "changeme"))
 
 
 def test_create_job_rejects_non_mp4():
