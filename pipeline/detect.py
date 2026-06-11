@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 def detect_frame(frame, base_map, config):
     """Isolate detections using proven working logic."""
-    WW = int(config["world"]["tile_width"])
+    WW = int(config.get("world", {}).get("tile_width",
+         frame.shape[1] // 2))
     H = base_map.shape[0]
     Wfull = base_map.shape[1]
     thr = config["detection"]["threshold"]
