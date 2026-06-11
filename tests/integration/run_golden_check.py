@@ -42,7 +42,7 @@ top5 = np.argsort(search)[-5:][::-1]
 for i in top5:
     print(f"  lag={i+800} energy={search[i]:.1f}")
 
-ww = find_world_width(mid)
+ww = find_world_width(mid, config)
 print(f"world_width={ww}")
 base = build_base_map(MP4, config)
 print(f"base_map shape={base.shape}")
