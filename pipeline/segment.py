@@ -47,23 +47,26 @@ def find_segment_boundaries(
     diffs: np.ndarray,
     threshold: float
 ) -> list[tuple]:
-    """Find clean segment boundaries using merge logic
-    from the proven working implementation."""
-    N = len(diffs)
-    trans = [i for i in range(1, N) if diffs[i] > threshold]
-
-    # Merge transitions within 8 frames, keep higher-diff frame
-    merged = []
+    """Find clean segment boundaries using two-pass logic."""
+    # Pass 1: coarse boundaries at threshold=8.0
+    trans = [i for i in range(1, len(diffs)) if diffs[i] > 8.0]
+    boundaries_1 = [0]
     for t in trans:
+        if t - boundaries_1[-1] > 5:
+            boundaries_1.append(t)
+    boundaries_1.append(len(diffs))
+
+    # Pass 2: refine using threshold parameter (0.5) on same diffs
+    trans2 = [i for i in range(1, len(diffs)) if diffs[i] > threshold]
+    merged = []
+    for t in trans2:
         if not merged or t - merged[-1] > 8:
             merged.append(t)
         else:
             if diffs[t] > diffs[merged[-1]]:
                 merged[-1] = t
 
-    boundaries = [0] + merged + [N]
-
-    # Build segment list, drop tiny slivers < 6 frames
+    boundaries = [0] + merged + [len(diffs)]
     segs = []
     for b in range(len(boundaries) - 1):
         s, e = boundaries[b], boundaries[b+1]

@@ -34,7 +34,7 @@ def accumulate(screenshots_dir, segments, base_map, config):
         mask = detect_frame(fr, base_map, config)
         presence += mask.astype(np.int32)
 
-    total = int(presence.sum())
+    total = int((presence > 0).sum())
     peak = int(presence.max())
     logger.info(
         f"Accumulation complete: "
