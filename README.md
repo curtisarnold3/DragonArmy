@@ -4,6 +4,12 @@ A deterministic pipeline that converts a Slingshot-style GNSS spoofing visualiza
 
 This repository is the working prototype. It targets a vendor handoff for hardening, deployment, and scale-out.
 
+## Try it live
+
+**URL:** https://www.totaleclipseoftheheatmap.com
+
+Upload a Slingshot GNSS spoofing MP4 and receive an aggregate density poster and screenshots ZIP in minutes. Access is credential-protected — contact the project owner for access.
+
 ## What's here today
 
 ✅ `pipeline/probe.py` — ffprobe wrapper, frame extractor  
@@ -20,7 +26,8 @@ This repository is the working prototype. It targets a vendor handoff for harden
 ✅ `pipeline/pipeline.py` — CLI orchestrator, progress callbacks  
 ✅ Two-pass cv2 architecture — sequential decode, no seeking, cached PNGs  
 ✅ `api/` — FastAPI job API (POST /jobs, GET /jobs/{id}, SSE, result download)  
-✅ `web/` — React + Vite + Tailwind SPA (dropzone → progress → download)
+✅ `web/` — React + Vite + Tailwind SPA (dropzone → progress → download)  
+✅ Deployed — Fly.io backend + Vercel frontend
 
 The 🚧 items are scaffolded and next in the build sequence. The detection core (Slices 0–4) is complete and golden-master tested.
 
@@ -80,6 +87,22 @@ Produces `out/poster.png` and `out/screenshots.zip`.
 | Compose    | `poster.py`    | Banner, legend, hourly grid, footer, crop 🚧                           |
 | Orchestrate| `pipeline.py`  | CLI entry point, progress callbacks 🚧                                 |
 
+## Deployment
+
+**Frontend:** React SPA deployed on Vercel at `totaleclipseoftheheatmap.com`. Auto-deploys from `main` branch on every push.
+
+**Backend:** FastAPI + pipeline worker deployed on Fly.io at `curtarnold.fly.dev`. Custom domain: `api.totaleclipseoftheheatmap.com`. Runs on a `performance-2x` machine (2 vCPU, 4GB RAM) with a 10GB persistent volume for job artifacts. Auto-stops when idle to minimize cost.
+
+**To redeploy backend after changes:**
+```bash
+cd ~/DragonArmy && git pull && fly deploy --app curtarnold
+```
+
+**Secrets (set via Fly CLI):**
+```bash
+fly secrets set API_USERNAME=<user> API_PASSWORD=<pass> --app curtarnold
+```
+
 ## Performance
 
 The pipeline decodes the source video exactly twice:
@@ -90,7 +113,7 @@ The pipeline decodes the source video exactly twice:
 
 All subsequent stages (base map, accumulation, hourly snapshots) read from those cached PNGs via `cv2.imread`. The video is never re-opened after Pass 2.
 
-This keeps peak memory under ~1.5 GB and total wall time under 10 minutes on a 2-vCPU container.
+This keeps peak memory under ~1.5 GB and total wall time approximately 5-10 minutes on a 2-vCPU container.
 
 ## Project layout
 
@@ -139,9 +162,9 @@ These are enforced by CI — a PR that violates them will fail automatically.
 | Phase             | Goal                                                  | Status               |
 |-------------------|-------------------------------------------------------|----------------------|
 | 1 — CLI core      | Working pipeline end-to-end, golden-master CI green   | ✅ Complete — CLI green, two-pass cv2 architecture |
-| 2 — Job API       | FastAPI + RQ + Redis wrapping the CLI                 | 🚧 In progress — API complete, deployment in progress |
-| 3 — Frontend      | React SPA: dropzone → progress → download            | 🚧 In progress — React SPA complete, pending deployment |
-| 4 — Deploy        | Publicly reachable instance, demo-ready               | 🚧 In progress — Fly.io + Vercel setup underway |
+| 2 — Job API       | FastAPI + RQ + Redis wrapping the CLI                 | ✅ Complete — FastAPI + BackgroundTasks, basic auth |
+| 3 — Frontend      | React SPA: dropzone → progress → download            | ✅ Complete — React SPA live on Vercel |
+| 4 — Deploy        | Publicly reachable instance, demo-ready               | ✅ Complete — Live at totaleclipseoftheheatmap.com |
 | 5 — Handoff       | CONTRACTS.md, recorded walkthrough, docs current      | ⬜ Not started       |
 
 Each phase ends with a demonstrable artifact. Transition to a hardening vendor can occur at any phase boundary.
