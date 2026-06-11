@@ -13,13 +13,12 @@ services:
       timeout: 3s
       retries: 5
 
-  web:
+  api:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: gnss-web
-    # Placeholder command - implemented in Slice 8
-    command: ["python", "-c", "print('web service placeholder')"]
+    container_name: gnss-api
+    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "8000:8000"
     environment:
@@ -28,6 +27,16 @@ services:
       - redis
     volumes:
       - ../out:/app/out
+
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    container_name: gnss-web
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
 
   worker:
     build:
