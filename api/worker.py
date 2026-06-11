@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def run_job(job_id: str, input_path: str, output_dir: str):
+def process_job(job_id: str, input_path: str, output_dir: str):
     """Run pipeline for a job. Called by RQ worker when RQ is enabled."""
     from pipeline.pipeline import run
 

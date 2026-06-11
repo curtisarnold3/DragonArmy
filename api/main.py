@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse, StreamingResponse
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ jobs: dict[str, dict] = {}
 
 
 @app.post("/jobs")
-async def create_job(file: UploadFile = File(...)):
+async def create_job(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     """Create a new job from uploaded MP4."""
     # Validate file is MP4
     if not file.filename.endswith(".mp4"):
@@ -47,8 +47,11 @@ async def create_job(file: UploadFile = File(...)):
     }
 
     # Enqueue as background task
-    loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, _run_pipeline, job_id)
+    if background_tasks:
+        background_tasks.add_task(_run_pipeline, job_id)
+    else:
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(None, _run_pipeline, job_id)
 
     return {"job_id": job_id, "status": "queued"}
 
