@@ -28,6 +28,20 @@ print(f"width={meta['width']} height={meta['height']} "
 
 print("=== CALIBRATE ===")
 mid = grab_frame(MP4, meta["nb_frames"] // 2)
+
+import cv2
+gray = cv2.cvtColor(mid, cv2.COLOR_BGR2GRAY)
+h = gray.shape[0]
+strip = gray[h//3 : 2*h//3, :]
+row = strip.mean(axis=0).astype(np.float64)
+corr = np.correlate(row, row, mode='full')
+center = len(row) - 1
+# Print top 5 peaks between 800 and 1600px
+search = corr[center + 800 : center + 1600]
+top5 = np.argsort(search)[-5:][::-1]
+for i in top5:
+    print(f"  lag={i+800} energy={search[i]:.1f}")
+
 ww = find_world_width(mid)
 print(f"world_width={ww}")
 base = build_base_map(MP4, config)
