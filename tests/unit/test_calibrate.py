@@ -32,14 +32,14 @@ def test_find_world_width_returns_int():
 def test_build_base_map_shape_and_dtype():
     """Build base map returns correct shape and dtype."""
     fake_frame = np.zeros((100, 200, 3), dtype=np.uint8)
-    fake_grab = lambda path, idx: fake_frame
 
     fake_meta = {"nb_frames": 10, "width": 200, "height": 100}
 
     cfg = {"base_map": {"sample_frames": 5}, "masks": {}}
 
     with patch("pipeline.probe.probe", return_value=fake_meta):
-        result = build_base_map("dummy.mp4", 200, cfg, grab_frame_fn=fake_grab)
+        with patch("pipeline.grabber.grab_frames_batch", return_value={i: fake_frame for i in range(5)}):
+            result = build_base_map("dummy.mp4", 200, cfg)
 
     assert result.shape == (100, 200, 3)
     assert result.dtype == np.uint8
@@ -50,7 +50,6 @@ def test_build_base_map_logo_paintout():
     # Create frame with logo area having different value (200) than surroundings (100)
     fake_frame = np.ones((100, 200, 3), dtype=np.uint8) * 100
     fake_frame[50:100, 150:200] = 200  # Logo area is brighter
-    fake_grab = lambda path, idx: fake_frame.copy()
 
     fake_meta = {"nb_frames": 10, "width": 200, "height": 100}
 
@@ -60,7 +59,8 @@ def test_build_base_map_logo_paintout():
     }
 
     with patch("pipeline.probe.probe", return_value=fake_meta):
-        result = build_base_map("dummy.mp4", 200, cfg, grab_frame_fn=fake_grab)
+        with patch("pipeline.grabber.grab_frames_batch", return_value={i: fake_frame.copy() for i in range(5)}):
+            result = build_base_map("dummy.mp4", 200, cfg)
 
     # Logo region should be painted with border median (close to 100, not 200)
     logo_region = result[50:100, 150:200]

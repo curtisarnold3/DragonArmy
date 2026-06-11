@@ -27,10 +27,13 @@ def test_accumulate_shape_and_dtype(cfg):
     """Accumulate returns correct shape and dtype."""
     base = np.zeros((10, 20, 3), dtype=np.uint8)
     fake_frame = np.zeros((10, 20, 3), dtype=np.uint8)
-    fake_grab = lambda path, idx: fake_frame
     segments = [{"start_frame": 0, "end_frame": 10}]
 
-    result = accumulate("dummy.mp4", segments, base, cfg, grab_frame_fn=fake_grab)
+    fake_meta = {"width": 20, "height": 10}
+
+    with patch("pipeline.probe.probe", return_value=fake_meta):
+        with patch("pipeline.grabber.grab_frames_batch", return_value={5: fake_frame}):
+            result = accumulate("dummy.mp4", segments, base, cfg)
 
     assert result.shape == (10, 10)
     assert result.dtype == np.uint16
@@ -41,13 +44,16 @@ def test_accumulate_counts_detections(cfg):
     base = np.zeros((10, 20, 3), dtype=np.uint8)
     bright = np.zeros((10, 20, 3), dtype=np.uint8)
     bright[5, 15, 2] = 200
-    fake_grab = lambda path, idx: bright
     segments = [
         {"start_frame": 0, "end_frame": 10},
         {"start_frame": 10, "end_frame": 20},
     ]
 
-    result = accumulate("dummy.mp4", segments, base, cfg, grab_frame_fn=fake_grab)
+    fake_meta = {"width": 20, "height": 10}
+
+    with patch("pipeline.probe.probe", return_value=fake_meta):
+        with patch("pipeline.grabber.grab_frames_batch", return_value={5: bright, 15: bright}):
+            result = accumulate("dummy.mp4", segments, base, cfg)
 
     assert result[5, 5] == 2
 

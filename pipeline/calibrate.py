@@ -22,23 +22,19 @@ def find_world_width(frame: np.ndarray) -> int:
     return width
 
 
-def build_base_map(mp4_path, world_width: int, config: dict, grab_frame_fn=None) -> np.ndarray:
+def build_base_map(mp4_path, world_width: int, config: dict) -> np.ndarray:
     """Build clean background via per-pixel temporal median with logo paint-out."""
     from pipeline.probe import probe
     meta = probe(mp4_path)
-
-    if grab_frame_fn is None:
-        from pipeline.grabber import grab_frame as _grab
-        def _grab_with_dims(path, idx):
-            return _grab(path, idx, width=meta["width"], height=meta["height"])
-        grab_frame_fn = _grab_with_dims
     nb_frames = meta["nb_frames"]
-    height = meta["height"]
-    width_px = meta["width"]
 
     n = config.get("base_map", {}).get("sample_frames", 45)
     indices = sorted(set(int(i) for i in np.linspace(0, nb_frames - 1, n)))
-    frames = np.stack([grab_frame_fn(mp4_path, i) for i in indices])
+
+    from pipeline.grabber import grab_frames_batch
+    frames_dict = grab_frames_batch(mp4_path, indices, width=meta["width"], height=meta["height"])
+    frame_list = [frames_dict[i] for i in indices if i in frames_dict]
+    frames = np.stack(frame_list)
     base = np.median(frames, axis=0).astype(np.uint8)
 
     logo = config.get("masks", {}).get("logo")

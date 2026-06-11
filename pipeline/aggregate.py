@@ -8,16 +8,10 @@ from scipy.ndimage import uniform_filter1d
 logger = logging.getLogger(__name__)
 
 
-def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dict, grab_frame_fn=None) -> np.ndarray:
+def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dict) -> np.ndarray:
     """Return uint16 (H, WW) array counting detections per pixel across all windows."""
     from pipeline.probe import probe
     meta = probe(mp4_path)
-
-    if grab_frame_fn is None:
-        from pipeline.grabber import grab_frame as _grab
-        def _grab_with_dims(path, idx):
-            return _grab(path, idx, width=meta["width"], height=meta["height"])
-        grab_frame_fn = _grab_with_dims
 
     H = base_map.shape[0]
     WW = base_map.shape[1] // 2
@@ -27,13 +21,26 @@ def accumulate(mp4_path, segments: list[dict], base_map: np.ndarray, config: dic
 
     rep_pos = config.get("segmentation", {}).get("representative_position", 0.55)
 
+    # Phase 1: Collect representative frame indices
+    rep_indices = []
     for seg in segments:
         start = seg["start_frame"]
         end = seg["end_frame"]
         if end is None:
             continue
-        rep_frame_idx = int(start + (end - start) * rep_pos)
-        frame = grab_frame_fn(mp4_path, rep_frame_idx)
+        idx = int(start + (end - start) * rep_pos)
+        rep_indices.append((seg, idx))
+
+    # Phase 2: Batch extract all frames
+    from pipeline.grabber import grab_frames_batch
+    all_idx = [idx for _, idx in rep_indices]
+    frames_dict = grab_frames_batch(mp4_path, all_idx, width=meta["width"], height=meta["height"])
+
+    # Phase 3: Accumulate detections
+    for seg, idx in rep_indices:
+        if idx not in frames_dict:
+            continue
+        frame = frames_dict[idx]
         detected = detect_frame(frame, base_map, config)
         presence += detected.astype(np.uint16)
 
