@@ -22,7 +22,7 @@ def find_world_width(frame: np.ndarray) -> int:
     return width
 
 
-def build_base_map(mp4_path, world_width: int, config: dict) -> np.ndarray:
+def build_base_map(mp4_path, config: dict) -> np.ndarray:
     """Build clean background via per-pixel temporal median with logo paint-out."""
     from pipeline.probe import probe
     meta = probe(mp4_path)

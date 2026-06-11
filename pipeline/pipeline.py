@@ -52,7 +52,7 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
     # Step 3: Build base map
     progress("base_map", 20)
     from pipeline.calibrate import build_base_map
-    base_map = build_base_map(mp4_path, world_width, config)
+    base_map = build_base_map(mp4_path, config)
 
     # Step 4: Compute title diffs
     progress("segment", 30)
