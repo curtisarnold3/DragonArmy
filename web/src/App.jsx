@@ -27,38 +27,6 @@ export default function App() {
     Authorization: 'Basic ' + btoa(creds.u + ':' + creds.p)
   }
 
-  function playTotalEclipse() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)()
-      // Opening notes of Total Eclipse of the Heart (approximate)
-      // B4, A4, G4, A4, B4, E4 with timing
-      const notes = [
-        [493.88, 0.0, 0.3],
-        [440.00, 0.35, 0.3],
-        [392.00, 0.70, 0.3],
-        [440.00, 1.05, 0.3],
-        [493.88, 1.40, 0.5],
-        [329.63, 1.95, 0.8],
-      ]
-      notes.forEach(([freq, start, dur]) => {
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.type = 'sine'
-        osc.frequency.value = freq
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + start)
-        gain.gain.exponentialRampToValueAtTime(
-          0.001, ctx.currentTime + start + dur
-        )
-        osc.start(ctx.currentTime + start)
-        osc.stop(ctx.currentTime + start + dur + 0.1)
-      })
-    } catch(e) {
-      // Silent fail if audio not supported
-    }
-  }
-
   async function handleLogin() {
     const res = await fetch(`${API_BASE}/jobs/healthcheck`, {
       headers: {
@@ -70,7 +38,36 @@ export default function App() {
     } else {
       setAuthed(true)
       setAuthError(false)
-      playTotalEclipse()
+
+      // Total Eclipse of the Heart easter egg
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext
+        if (AudioCtx) {
+          const ctx = new AudioCtx()
+          const notes = [
+            [493.88, 0.0, 0.4],
+            [440.00, 0.4, 0.4],
+            [392.00, 0.8, 0.4],
+            [440.00, 1.2, 0.4],
+            [493.88, 1.6, 0.6],
+            [329.63, 2.2, 1.0],
+          ]
+          notes.forEach(([freq, start, dur]) => {
+            const osc = ctx.createOscillator()
+            const gain = ctx.createGain()
+            osc.connect(gain)
+            gain.connect(ctx.destination)
+            osc.type = 'triangle'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.4, ctx.currentTime + start)
+            gain.gain.exponentialRampToValueAtTime(
+              0.001, ctx.currentTime + start + dur
+            )
+            osc.start(ctx.currentTime + start)
+            osc.stop(ctx.currentTime + start + dur + 0.1)
+          })
+        }
+      } catch(e) {}
     }
   }
 
