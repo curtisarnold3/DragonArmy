@@ -53,7 +53,7 @@ def test_build_base_map_logo_paintout(tmp_path):
     fake_frame[50:100, 150:200] = 200  # Logo area is brighter
 
     for i in range(5):
-        cv2.imwrite(str(tmp_path / f"step_{i:03d}_0000-0130z.png"), fake_frame.copy())
+        cv2.imwrite(str(tmp_path / f"step_{i:03d}_0000-0130Z.png"), fake_frame.copy())
 
     cfg = {
         "base_map": {"sample_frames": 5},
