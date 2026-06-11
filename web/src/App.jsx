@@ -127,7 +127,7 @@ export default function App() {
         </div>
       ) : (
         <>
-          <audio ref={audioRef} src="/eclipse.mp3" preload="auto" />
+          <audio ref={audioRef} src="/totaleclipse.mp3" preload="auto" />
           <h1 className="text-2xl font-bold text-white mb-2">
             GNSS Spoofing Aggregator
           </h1>
