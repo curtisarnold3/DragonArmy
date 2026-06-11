@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 def detect_frame(frame: np.ndarray, base_map: np.ndarray, config: dict) -> np.ndarray:
     """Return boolean (H, WW) array where True = detection."""
     # STEP 1: Compute luminance-weighted diff
-    weights = config["detection"]["luminance_weights"]
-    diff = frame.astype(np.float32) - base_map.astype(np.float32)
+    diff = frame.astype(np.int16) - base_map.astype(np.int16)
     luminance = (
-        diff[:, :, 0] * weights[0] +
-        diff[:, :, 1] * weights[1] +
-        diff[:, :, 2] * weights[2]
+        0.114 * diff[:, :, 0] +
+        0.587 * diff[:, :, 1] +
+        0.299 * diff[:, :, 2]
     )
+    luminance = np.clip(luminance, 0, None).astype(np.float32)
 
     # STEP 2: Threshold positive luminance increases
     threshold = config["detection"]["threshold"]
