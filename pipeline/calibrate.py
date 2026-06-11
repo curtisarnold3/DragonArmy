@@ -15,9 +15,9 @@ def find_world_width(frame: np.ndarray) -> int:
     row = strip.mean(axis=0).astype(np.float64)
     corr = np.correlate(row, row, mode='full')
     center = len(row) - 1
-    search = corr[center + len(row)//4 : center + len(row)]
+    search = corr[center + len(row)*3//8 : center + len(row)]
     peak_offset = int(np.argmax(search))
-    width = peak_offset + len(row)//4
+    width = peak_offset + len(row)*3//8
     logger.info(f"World width: {width}px")
     return width
 
