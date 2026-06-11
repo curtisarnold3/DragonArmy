@@ -91,3 +91,23 @@ Implication: determinism rides on the base-image digest. Bumping it (e.g. a secu
 update) may change the ffmpeg version — that's an explicit, reviewed change as its own
 commit, and the build log records the new version. The golden-master test catches any
 output drift. We pin the image that contains ffmpeg; we do not independently pin ffmpeg.
+
+---
+
+## D-009: Pipeline performance is acceptable for prototype; optimization deferred
+
+**Decision:** The full pipeline run against the reference MP4 takes
+approximately 45–60 minutes in CI due to two full video decode passes
+(base map + accumulation) at 2560×1198 resolution. This is acceptable
+for the prototype demo where the use case is "upload and wait." No
+performance optimization is required before Phase 2.
+
+**Reasoning:** A previous CI run completed successfully and produced
+correct output. The slowness is structural — two sequential full-video
+ffmpeg pipe decodes — not a bug. Options for future optimization include
+combining base map sampling and accumulation into a single video pass,
+or downscaling frames before processing. These are post-handoff
+improvements.
+
+**Implication:** The Phase 1 exit criterion (correct poster + screenshots)
+is met on correctness grounds. The golden-master CI jo
