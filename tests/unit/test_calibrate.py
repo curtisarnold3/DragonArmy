@@ -39,7 +39,7 @@ def test_build_base_map_shape_and_dtype():
 
     with patch("pipeline.probe.probe", return_value=fake_meta):
         with patch("pipeline.grabber.grab_all_frames_sampled", return_value={i: fake_frame for i in range(5)}):
-            result = build_base_map("dummy.mp4", 200, cfg)
+            result = build_base_map("dummy.mp4", cfg)
 
     assert result.shape == (100, 200, 3)
     assert result.dtype == np.uint8
@@ -60,7 +60,7 @@ def test_build_base_map_logo_paintout():
 
     with patch("pipeline.probe.probe", return_value=fake_meta):
         with patch("pipeline.grabber.grab_all_frames_sampled", return_value={i: fake_frame.copy() for i in range(5)}):
-            result = build_base_map("dummy.mp4", 200, cfg)
+            result = build_base_map("dummy.mp4", cfg)
 
     # Logo region should be painted with border median (close to 100, not 200)
     logo_region = result[50:100, 150:200]
