@@ -36,7 +36,7 @@ def test_build_base_map_shape_and_dtype(tmp_path):
     import cv2
     fake_frame = np.zeros((100, 200, 3), dtype=np.uint8)
     for i in range(5):
-        cv2.imwrite(str(tmp_path / f"step_{i:03d}_0000-0130z.png"), fake_frame)
+        cv2.imwrite(str(tmp_path / f"step_{i:03d}_0000-0130Z.png"), fake_frame)
 
     cfg = {"base_map": {"sample_frames": 5}, "masks": {}}
     result = build_base_map(tmp_path, cfg)
