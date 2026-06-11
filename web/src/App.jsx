@@ -45,19 +45,25 @@ export default function App() {
         if (AudioCtx) {
           const ctx = new AudioCtx()
           const notes = [
-            [493.88, 0.0, 0.4],
-            [440.00, 0.4, 0.4],
-            [392.00, 0.8, 0.4],
-            [440.00, 1.2, 0.4],
-            [493.88, 1.6, 0.6],
-            [329.63, 2.2, 1.0],
+            [987.77, 0.0,  0.25],  // B5
+            [880.00, 0.25, 0.25],  // A5
+            [783.99, 0.5,  0.25],  // G5
+            [659.25, 0.75, 0.25],  // E5
+            [739.99, 1.0,  0.5 ],  // F#5
+            [659.25, 1.5,  0.25],  // E5
+            [587.33, 1.75, 0.25],  // D5
+            [493.88, 2.0,  0.5 ],  // B4
+            [523.25, 2.5,  0.25],  // C5
+            [493.88, 2.75, 0.25],  // B4
+            [440.00, 3.0,  0.5 ],  // A4
+            [493.88, 3.5,  0.75],  // B4
           ]
           notes.forEach(([freq, start, dur]) => {
             const osc = ctx.createOscillator()
             const gain = ctx.createGain()
             osc.connect(gain)
             gain.connect(ctx.destination)
-            osc.type = 'triangle'
+            osc.type = 'sine'
             osc.frequency.value = freq
             gain.gain.setValueAtTime(0.4, ctx.currentTime + start)
             gain.gain.exponentialRampToValueAtTime(
