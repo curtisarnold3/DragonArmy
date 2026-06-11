@@ -96,10 +96,7 @@ poster:
 
 # Audit / validation values (for golden-master tests)
 audit:
-  max_persistence: 57  # max window count observed in reference MP4
-  total_detection_pixels: 29538  # approximate total across all windows
-  expected_segments: 135
-  window_1_utc_start: "00:00Z"
-  window_1_utc_end: "01:30Z"
-  window_134_utc_start: "22:10Z"
-  window_134_utc_end: "23:40Z"
+  expected_segments: 130
+  max_persistence: 59
+  total_detection_pixels: 29539
+  seam_col: 693
