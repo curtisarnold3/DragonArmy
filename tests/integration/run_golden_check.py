@@ -30,7 +30,7 @@ print("=== CALIBRATE ===")
 mid = grab_frame(MP4, meta["nb_frames"] // 2)
 ww = find_world_width(mid)
 print(f"world_width={ww}")
-base = build_base_map(MP4, ww, config)
+base = build_base_map(MP4, config)
 print(f"base_map shape={base.shape}")
 
 print("=== SEGMENT ===")
