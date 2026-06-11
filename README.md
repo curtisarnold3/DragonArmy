@@ -23,10 +23,9 @@ Upload a Slingshot GNSS spoofing MP4 and receive an aggregate density poster and
 ✅ CI: unit tests, constraint guards (no LLM, no web imports), Docker build, in-container tests  
 ✅ `pipeline/render.py` — LUT colormap, gamma, 60% overlay, hourly snapshots  
 ✅ `pipeline/poster.py` — banner, legend, hourly grid, footer, crop  
-✅ `pipeline/pipeline.py` — CLI orchestrator, progress callbacks  
-✅ Two-pass cv2 architecture — sequential decode, no seeking, cached PNGs  
+✅ `pipeline/pipeline.py` — CLI orchestrator, two-pass cv2 architecture  
 ✅ `api/` — FastAPI job API (POST /jobs, GET /jobs/{id}, SSE, result download)  
-✅ `web/` — React + Vite + Tailwind SPA (dropzone → progress → download)  
+✅ `web/` — React SPA (login, dropzone → progress → download)  
 ✅ Deployed — Fly.io backend + Vercel frontend
 
 The 🚧 items are scaffolded and next in the build sequence. The detection core (Slices 0–4) is complete and golden-master tested.
@@ -121,27 +120,28 @@ This keeps peak memory under ~1.5 GB and total wall time approximately 5-10 minu
 gnss-aggregator/
 ├── docker-compose.yml
 ├── docker/
-│   └── Dockerfile                 # pinned base + ffmpeg + Python deps
+│   ├── Dockerfile                 # CI image — pinned base + ffmpeg + Python deps
+│   └── Dockerfile.fly             # production Fly.io image
 ├── pipeline/                      # pure CV — no web, no I/O surprises
 │   ├── probe.py                   # ✅ ffprobe wrapper
 │   ├── calibrate.py               # ✅ world width + base map
 │   ├── segment.py                 # ✅ window boundaries + UTC labels
 │   ├── detect.py                  # ✅ luminance diff, mask, fold
 │   ├── aggregate.py               # ✅ presence accumulation + seam roll
-│   ├── render.py                  # 🚧 LUT, overlay, hourly snaps
-│   ├── poster.py                  # 🚧 composition
-│   ├── pipeline.py                # 🚧 CLI orchestrator
+│   ├── render.py                  # ✅ LUT, overlay, hourly snaps
+│   ├── poster.py                  # ✅ composition
+│   ├── pipeline.py                # ✅ CLI orchestrator, two-pass cv2
 │   ├── config.yaml                # all layout constants
 │   └── assets/fonts/              # bundled DejaVuSans (pinned rendering)
 ├── api/
-│   ├── main.py                    # 🚧 FastAPI endpoints
-│   └── worker.py                  # 🚧 RQ task
+│   ├── main.py                    # ✅ FastAPI endpoints + basic auth
+│   └── worker.py                  # ✅ RQ task stub
 ├── web/
-│   └── src/                       # 🚧 React SPA
+│   └── src/                       # ✅ React SPA — login, dropzone, progress, downloads
 ├── tests/
-│   ├── unit/                      # per-stage tests with synthetic fixtures
-│   ├── golden/                    # reference MP4 (git-lfs) + expected hashes
-│   └── e2e/                       # 🚧 upload→download through running API
+│   ├── unit/                      # ✅ per-stage tests, 40/40 passing
+│   ├── golden/                    # ✅ reference MP4 (git-lfs) + golden master passing
+│   └── e2e/                       # ✅ upload→download verified via live deployment
 ├── requirements.txt               # fully pinned (==)
 └── README.md
 ```
