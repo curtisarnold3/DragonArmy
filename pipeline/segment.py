@@ -58,6 +58,8 @@ def find_segment_boundaries(
 
     # Pass 2: refine using threshold parameter (0.5) on same diffs
     trans2 = [i for i in range(1, len(diffs)) if diffs[i] > threshold]
+    logger.info(f"Raw transitions at threshold {threshold}: {len(trans2)}")
+
     merged = []
     for t in trans2:
         if not merged or t - merged[-1] > 8:
@@ -65,6 +67,7 @@ def find_segment_boundaries(
         else:
             if diffs[t] > diffs[merged[-1]]:
                 merged[-1] = t
+    logger.info(f"After merge (window=8): {len(merged)}")
 
     boundaries = [0] + merged + [len(diffs)]
     segs = []
@@ -72,6 +75,7 @@ def find_segment_boundaries(
         s, e = boundaries[b], boundaries[b+1]
         if e - s >= 6:
             segs.append((s, e))
+    logger.info(f"After min_len filter (>=6): {len(segs)}")
 
     logger.info(f"Segments: {len(segs)} "
                 f"(from {len(merged)} clean transitions)")

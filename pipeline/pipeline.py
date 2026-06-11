@@ -111,7 +111,7 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
             zf.write(f, f.name)
 
     peak = int(rolled_presence.max())
-    total = int(rolled_presence.sum())
+    total = int((rolled_presence > 0).sum())
     progress("done", 100)
     logger.info(
         f"Pipeline complete: poster={poster_path}, "
