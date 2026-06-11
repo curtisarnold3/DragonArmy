@@ -18,7 +18,7 @@ This repository is the working prototype. It targets a vendor handoff for harden
 ✅ `pipeline/render.py` — LUT colormap, gamma, 60% overlay, hourly snapshots  
 ✅ `pipeline/poster.py` — banner, legend, hourly grid, footer, crop  
 ✅ `pipeline/pipeline.py` — CLI orchestrator, progress callbacks  
-🚧 `api/` — FastAPI job API (POST /jobs, status, SSE, result download)  
+✅ `api/` — FastAPI job API (POST /jobs, GET /jobs/{id}, SSE, result download)  
 🚧 `web/` — React + Vite + Tailwind SPA (dropzone → progress → download)
 
 The 🚧 items are scaffolded and next in the build sequence. The detection core (Slices 0–4) is complete and golden-master tested.
@@ -126,7 +126,7 @@ These are enforced by CI — a PR that violates them will fail automatically.
 | Phase             | Goal                                                  | Status               |
 |-------------------|-------------------------------------------------------|----------------------|
 | 1 — CLI core      | Working pipeline end-to-end, golden-master CI green   | ✅ Complete — CLI green end to end |
-| 2 — Job API       | FastAPI + RQ + Redis wrapping the CLI                 | ⬜ Not started       |
+| 2 — Job API       | FastAPI + RQ + Redis wrapping the CLI                 | 🚧 In progress (Slice 8 complete — hardening to RQ pending) |
 | 3 — Frontend      | React SPA: dropzone → progress → download            | ⬜ Not started       |
 | 4 — Deploy        | Publicly reachable instance, demo-ready               | ⬜ Not started       |
 | 5 — Handoff       | CONTRACTS.md, recorded walkthrough, docs current      | ⬜ Not started       |
