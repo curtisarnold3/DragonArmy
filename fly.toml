@@ -1,5 +1,4 @@
-[app]
-name = "totaleclipseoftheheatmap-api"
+app = "curtarnold"
 primary_region = "iad"
 
 [build]

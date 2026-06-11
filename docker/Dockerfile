@@ -20,6 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
+# cache-bust: 2026-06-11
 COPY pipeline/ ./pipeline/
 COPY api/ ./api/
 COPY tests/ ./tests/
