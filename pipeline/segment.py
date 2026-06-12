@@ -25,6 +25,17 @@ def compute_title_diffs(mp4_path, config: dict) -> np.ndarray:
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+    # Validate resolution matches expected layout
+    expected_width = config.get("layout", {}).get("expected_width", 2560)
+    expected_height = config.get("layout", {}).get("expected_height", 1198)
+    if frame_width != expected_width or frame_height != expected_height:
+        cap.release()
+        raise ValueError(
+            f"Layout mismatch: video is {frame_width}×{frame_height}, "
+            f"expected {expected_width}×{expected_height}. "
+            f"This pipeline only supports the Slingshot GNSS SPOOFING (Standard) layout."
+        )
+
     sigs = []
     while True:
         ret, frame = cap.read()
@@ -130,5 +141,10 @@ def assign_times(
             f"Segmentation: {len(result)} windows, "
             f"first={result[0]['utc_start'].strftime('%H:%MZ')}, "
             f"last={result[-1]['utc_start'].strftime('%H:%MZ')}"
+        )
+    else:
+        raise ValueError(
+            "Segmentation produced 0 windows. Check that the video matches the expected layout "
+            "and that config masks.title coordinates are correct for this resolution."
         )
     return result

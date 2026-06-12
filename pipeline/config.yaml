@@ -1,6 +1,10 @@
 # GNSS-AGG Configuration
 # Layout constants and detection parameters for Slingshot "GNSS SPOOFING (Standard)" layout
 
+layout:
+  expected_width: 2560
+  expected_height: 1198
+
 base_map:
   method: temporal_median
   sample_frames: 45
