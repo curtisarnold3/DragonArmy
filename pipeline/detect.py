@@ -7,9 +7,18 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def detect_frame(frame, base_map, config):
+def detect_frame(frame, base_map, config, is_tiled=True):
     """Isolate detections using proven working logic.
     Supports any resolution via normalized mask coordinates.
+
+    Args:
+        frame: Current frame (H × W × 3)
+        base_map: Base map (H × W × 3)
+        config: Pipeline config
+        is_tiled: If True, fold two world copies; if False, single copy
+
+    Returns:
+        np.ndarray: Boolean mask (H × W) where True = detection
     """
     WW = int(config.get("world", {}).get("tile_width",
          frame.shape[1] // 2))
@@ -39,6 +48,10 @@ def detect_frame(frame, base_map, config):
 
     binc[ty0:ty1, tx0:tx1] = 0
     binc[ly0:ly1, lx0:lx1] = 0
+
+    # For single-copy layouts, skip fold
+    if not is_tiled:
+        return binc > thr
 
     # Fold two world copies via per-pixel max
     A = binc[:, WW:2*WW]

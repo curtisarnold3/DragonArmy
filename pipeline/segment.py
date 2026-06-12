@@ -94,8 +94,8 @@ def find_segment_boundaries(
     logger.info(f"Segments: {len(segs)} "
                 f"(from {len(merged)} clean transitions)")
 
-    # Sanity check: must find at least 10 segments for valid Slingshot video
-    if len(segs) < 10:
+    # Sanity check: must find at least 2 segments for valid Slingshot video
+    if len(segs) < 2:
         raise ValueError(
             f"Segmentation found only {len(segs)} segments — title region may not "
             f"match this video's layout. Check that this is a Slingshot GNSS SPOOFING video."

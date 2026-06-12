@@ -10,17 +10,23 @@ logger = logging.getLogger(__name__)
 
 
 def find_world_width(base_map: np.ndarray,
-                     config: dict) -> int:
+                     config: dict) -> tuple[int, bool]:
     """Measure world tile width via autocorrelation of
     base map grayscale. Uses scipy.signal.find_peaks with
     distance=200 to find dominant lag. Falls back to
-    config value if no peak found."""
+    config value if no peak found.
+
+    Returns:
+        tuple[int, bool]: (world_width, is_tiled)
+        - world_width: detected tile width in pixels
+        - is_tiled: True if two world copies detected, False for single copy
+    """
 
     # Check config for pinned value
     tw = config.get("world", {}).get("tile_width", "auto")
     if tw != "auto":
-        logger.info(f"World width from config: {tw}px")
-        return int(tw)
+        logger.info(f"World width from config: {tw}px (tiled assumed)")
+        return int(tw), True
 
     # Autocorrelation on equatorial band of base map
     g = cv2.cvtColor(base_map,
@@ -36,14 +42,21 @@ def find_world_width(base_map: np.ndarray,
     if len(peaks) == 0:
         fallback = base_map.shape[1] // 2
         logger.warning(
-            f"No autocorr peak found; using frame//2={fallback}"
+            f"No autocorr peak found; using frame//2={fallback}, single-copy assumed"
         )
-        return fallback
+        return fallback, False
 
     order = np.argsort(ac[peaks])[::-1]
     top = peaks[order[0]]
-    logger.info(f"World width (autocorr): {top}px")
-    return int(top)
+
+    # Compute confidence: peak_value / mean_value
+    peak_value = ac[top]
+    mean_value = ac.mean()
+    confidence = peak_value / mean_value if mean_value > 0 else 0.0
+    is_tiled = confidence >= 2.0
+
+    logger.info(f"World width: {top}px, tiled: {is_tiled} (confidence: {confidence:.2f})")
+    return int(top), is_tiled
 
 
 def build_base_map(

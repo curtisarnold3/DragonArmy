@@ -59,22 +59,22 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
     from pipeline.calibrate import build_base_map, find_world_width
     base_map = build_base_map(screenshots_dir, config)
 
-    # Measure world width from base map (confirms WW=1197)
-    ww = find_world_width(base_map, config)
-    logger.info(f"World width confirmed: {ww}px")
+    # Measure world width from base map and detect tiled layout
+    ww, is_tiled = find_world_width(base_map, config)
+    logger.info(f"World width confirmed: {ww}px, tiled: {is_tiled}")
     progress("base_map", 55)
 
     # ── Accumulate from cached PNGs ──
     progress("detect", 60)
     from pipeline.aggregate import accumulate, seam_roll
     presence = accumulate(screenshots_dir, segments,
-                          base_map, config)
+                          base_map, config, is_tiled=is_tiled)
     progress("detect", 70)
 
     # ── Seam roll ──
     progress("seam_roll", 75)
     rolled_presence, rolled_bg, roll_offset = seam_roll(
-        presence, base_map, config
+        presence, base_map, config, is_tiled=is_tiled
     )
 
     # ── Render hero ──

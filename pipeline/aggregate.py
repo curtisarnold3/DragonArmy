@@ -9,14 +9,31 @@ from scipy.ndimage import uniform_filter1d
 logger = logging.getLogger(__name__)
 
 
-def accumulate(screenshots_dir, segments, base_map, config):
-    """Accumulate presence using proven working logic."""
+def accumulate(screenshots_dir, segments, base_map, config, is_tiled=True):
+    """Accumulate presence using proven working logic.
+
+    Args:
+        screenshots_dir: Directory containing cached PNGs
+        segments: List of segment dicts
+        base_map: Temporal median base map
+        config: Pipeline config
+        is_tiled: If True, fold two world copies; if False, single copy
+
+    Returns:
+        np.ndarray: Presence array (H × W), dtype uint16
+    """
     from pipeline.detect import detect_frame
     from pathlib import Path
 
     WW = int(config["world"]["tile_width"])
     H = base_map.shape[0]
-    presence = np.zeros((H, WW), dtype=np.int32)
+
+    # For single-copy layouts, presence array is full frame width
+    if not is_tiled:
+        W = base_map.shape[1]
+        presence = np.zeros((H, W), dtype=np.int32)
+    else:
+        presence = np.zeros((H, WW), dtype=np.int32)
 
     screenshots_dir = Path(screenshots_dir)
 
@@ -31,7 +48,7 @@ def accumulate(screenshots_dir, segments, base_map, config):
         fr = cv2.imread(str(fpath))
         if fr is None:
             continue
-        mask = detect_frame(fr, base_map, config)
+        mask = detect_frame(fr, base_map, config, is_tiled=is_tiled)
         presence += mask.astype(np.int32)
 
     total = int((presence > 0).sum())
@@ -48,8 +65,24 @@ def seam_roll(
     presence: np.ndarray,
     base_map: np.ndarray,
     config: dict,
+    is_tiled: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, int]:
-    """Roll presence and background to put seam in empty ocean."""
+    """Roll presence and background to put seam in empty ocean.
+
+    Args:
+        presence: Presence array (H × W)
+        base_map: Base map image
+        config: Pipeline config
+        is_tiled: If True, extract world_bg from second tile; if False, use base_map as-is
+
+    Returns:
+        tuple[np.ndarray, np.ndarray, int]: (rolled_presence, rolled_bg, roll_offset)
+    """
+    # For single-copy layouts, skip rolling
+    if not is_tiled:
+        logger.info("Single-copy layout detected, skipping seam roll")
+        return presence, base_map, 0
+
     WW = presence.shape[1]
     world_bg = base_map[:, WW:2*WW]
 
