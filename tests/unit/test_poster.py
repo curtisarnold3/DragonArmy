@@ -11,6 +11,7 @@ from pipeline.poster import compose_poster
 @pytest.fixture
 def config():
     return {
+        "world": {"tile_width": 1197},
         "render": {
             "colormap": [
                 [0.0, [0, 0, 255]],
@@ -62,9 +63,9 @@ def test_compose_poster_returns_ndarray(hero, segments, presence, config):
 
 
 def test_compose_poster_width_matches_hero(hero, segments, presence, config):
-    """Compose poster width matches hero width."""
+    """Compose poster width matches config tile_width (1197px)."""
     result = compose_poster(hero, [], segments, presence, config)
-    assert result.shape[1] == hero.shape[1]
+    assert result.shape[1] == 1197
 
 
 def test_compose_poster_height_greater_than_hero(hero, segments, presence, config):
