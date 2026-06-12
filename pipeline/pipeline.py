@@ -184,7 +184,7 @@ def _build_hourly_snapshots(segments, screenshots_dir,
         frame = cv2.imread(str(fpath))
         if frame is None:
             continue
-        detected = detect_frame(frame, base_map, config)
+        detected = detect_frame(frame, base_map, config, is_tiled=is_tiled)
         snapshot = world_bg.copy()
         snapshot[detected] = [255, 255, 0]
         results.append({"segment": seg, "image": snapshot})
