@@ -110,4 +110,70 @@ or downscaling frames before processing. These are post-handoff
 improvements.
 
 **Implication:** The Phase 1 exit criterion (correct poster + screenshots)
-is met on correctness grounds. The golden-master CI jo
+is met on correctness grounds. The golden-master CI job passes with
+acceptable wall time.
+
+---
+
+## D-010: Two-pass cv2 architecture over ffmpeg subprocesses
+
+**Decision:** Use cv2.VideoCapture for sequential video decoding instead
+of ffmpeg subprocess per-frame extraction. Pass 1 = segmentation
+(compute_title_diffs), Pass 2 = screenshot extraction. All subsequent
+stages read from cached PNGs.
+
+**Reasoning:** cv2.VideoCapture sequential reads are 10-50x faster than
+launching ffmpeg subprocesses for individual frame extraction. The
+two-pass approach keeps memory usage flat while dramatically improving
+wall-clock performance.
+
+**Implication:** pipeline/pipeline.py orchestrates two full video
+decodes. Frame extraction caches ~130 representative PNGs to disk;
+all downstream stages (base map, accumulation, hourly snapshots) read
+from those cached files, never re-opening the video.
+
+---
+
+## D-011: In-memory job store for MVP
+
+**Decision:** Job state is stored in a Python dict in the FastAPI
+process. Jobs are lost on redeploy. Production swap to Redis+RQ
+per D-007 happens post-handoff.
+
+**Reasoning:** BackgroundTasks + in-memory dict is sufficient for
+prototype demo scale. No need to run Redis during development phase.
+
+**Implication:** Redeploying the Fly.io backend loses all in-flight
+and completed jobs. Acceptable for demo. Production hardening adds
+Redis persistence.
+
+---
+
+## D-012: Poster always normalized to 1197px wide
+
+**Decision:** Non-standard resolution videos are scaled to 1197px output
+width for poster composition. Scaling uses cv2.INTER_LANCZOS4 for
+clean upscaling.
+
+**Reasoning:** Variable-width posters look like mobile screenshots
+instead of professional analysis products. Normalizing to reference
+width (1197px) provides consistent output format regardless of input
+resolution.
+
+**Implication:** pipeline/poster.py scales hero map and hourly snapshots
+to 1197px wide before composition. Content is scaled proportionally.
+
+---
+
+## D-013: Basic auth via Fly secrets
+
+**Decision:** HTTP Basic Auth for upload and status endpoints.
+API_USERNAME and API_PASSWORD set via fly secrets. Download endpoints
+are public (UUID provides security).
+
+**Reasoning:** Simple, widely supported, no session management. UUID
+job IDs are unguessable, so downloads don't need separate auth.
+
+**Implication:** Frontend stores credentials in React state, sends
+Authorization header with every upload/status request. fly secrets set
+API_USERNAME=X API_PASSWORD=Y --app curtarnold sets credentials.

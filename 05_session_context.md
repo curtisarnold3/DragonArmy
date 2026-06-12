@@ -1,71 +1,60 @@
 # GNSS-AGG — Session Context
 
-> The "where are we right now" file. Most volatile of the six — rewrite it freely.
+## Current state
+Phase: ALL PHASES COMPLETE through Phase 4 (deployed)
+HEAD SHA: f780a63
+Branch: main, working tree clean
+Live URL: https://www.totaleclipseoftheheatmap.com
+Backend: https://curtarnold.fly.dev (app: curtarnold, Fly.io)
+Vercel project: dragon-army (auto-deploys from main)
 
-## Current state (start of new chat)
+## What works
+- Full pipeline: upload MP4 → poster PNG + screenshots ZIP
+- 40/40 unit tests passing, golden master passing (presence_max=59, total=29,539)
+- Login modal with basic auth (credentials via fly secrets)
+- Auto-deploy to Fly via GitHub Actions (FLY_API_TOKEN set)
+- Poster always normalized to 1197px wide output
 
-**Phase:** Phase 1 — Scaffold & CLI Core ⬜ not started.
+## Active bug
+"No screenshot PNGs found" error on non-reference videos.
+Diagnostic logging added at f780a63 — needs to be run.
+Steps:
+1. Deploy f780a63: cd ~/DragonArmy && git pull && fly deploy --app curtarnold
+2. Upload the problematic video
+3. fly logs --app curtarnold
+4. Look for _extract_frames() diagnostic lines:
+   - "VideoCapture opened: True/False"
+   - "Frame count: N"
+   - "Plan keys count: N"
+   - "Loop ended at idx=N, saved=N"
+5. If Plan keys count=0 → segmentation produced zero segments
+6. If Frame count=0 → cv2 cannot decode the video
+7. If Loop ended saved=0 but plan has keys → frame indices beyond video length
 
-**Repository:** Not yet initialized. No commits. Working tree does not exist yet.
+## Architecture (two-pass cv2)
+Pass 1: compute_title_diffs() reads entire video → title diffs → segment boundaries
+Pass 2: _extract_frames() reads video → writes ~130 representative PNGs
+Then: build_base_map() + accumulate() read from cached PNGs (never re-open video)
 
-**Last completed work:**
-- None. This is the project-start state. The six knowledge files are the first artifact.
+## Key config values
+tile_width: 1197 (for 2560px reference video)
+detection threshold: 14.0
+seam_col: 693 (confirmed)
+origin_utc: 2026-06-09T00:00:00Z
 
-**Pipeline / app state at last check:** Nothing running. No Docker image built. No reference MP4 ingested yet.
+## Stack
+Python 3.11, cv2, numpy, scipy, Pillow
+FastAPI + BackgroundTasks (in-memory job store)
+React + Vite + Tailwind on Vercel
+Fly.io backend (performance-2x, 4GB RAM, 10GB /data/jobs volume)
 
-## What's next (immediate)
-
-**Sprint: Slice 0 — Scaffold**
-
-1. Initialize the repo: `gnss-aggregator/`, git init, initial commit of README + `.gitignore`.
-2. Write `requirements.txt` with all deps fully pinned (`==`): `opencv-python-headless`, `numpy`, `scipy`, `Pillow`, `fastapi`, `uvicorn`, `rq`, `redis`, `httpx` (for e2e tests), `pytest`. Include a comment noting the ffmpeg system binary version.
-3. Write `docker/Dockerfile`: pinned Python 3.11 base image (by digest), install ffmpeg at a fixed version, copy `requirements.txt`, `pip install -r requirements.txt`.
-4. Write `docker-compose.yml`: three services — `web` (FastAPI), `worker` (RQ), `redis` (official pinned image).
-5. Create an empty `tests/` structure with a placeholder test that always passes.
-6. Confirm CI runs: `docker compose build` succeeds, empty test suite is green.
-
-**Before this sprint starts:** No blocking decisions outstanding. CEO needs to provide the reference MP4 and drop it into `tests/golden/` via git-lfs once the repo exists.
-
-**Exit criterion for Slice 0:** `docker compose build` succeeds with no errors. `pytest tests/` passes (even if the only test is `assert True`). This is confirmed by Claude Code's per-commit report.
-
-## Backlog (deferred until Slice 0 completes)
-
-Ordered by slice sequence:
-
-1. Slice 1 — Video primitives (`probe.py` + frame extractor)
-2. Slice 2 — Calibration (`calibrate.py`)
-3. Slice 3 — Segmentation + time model (`segment.py`)
-4. Slice 4 — Detection core — **golden-master anchor**
-5. Slice 5 — Rendering (`render.py`)
-6. Slice 6 — Poster composition (`poster.py`)
-7. Slice 7 — Packaging + CLI (`pipeline.py`)
-8. Slice 8 — Job API (`api/`)
-9. Slice 9 — Frontend (`web/`)
-10. Slice 10 — Containerize + deploy
-
-Dropped from roadmap: Tesseract OCR for timestamp verification; any ML inference in the pipeline.
-
-## Open questions / unresolved
-
-- **Reference MP4 location** — CEO needs to provide the Slingshot source file and set up git-lfs in the repo before Slice 1 can be validated. Not blocking Slice 0.
-- **Deployment target** — Fly.io vs Render vs VPS not yet decided. Not blocking any slice before 10.
-- **S3 vs local volume for job artifacts** — MVP uses local volume. Production target unresolved. Not blocking before Slice 8.
-
-## Active risks being tracked
-
-- **Font hinting divergence** — if DejaVu fonts are not committed to the repo and instead pulled from the OS, poster pixel output will vary across environments. Mitigation: commit `DejaVuSans.ttf` and `DejaVuSans-Bold.ttf` into `pipeline/assets/fonts/` in Slice 0 or Slice 6 at the latest.
-- **ffmpeg version drift** — if the Dockerfile installs `ffmpeg` without pinning the version, a base-image update could change frame-decode behavior. Mitigation: pin ffmpeg to an explicit version in the Dockerfile; document the version in a comment in `requirements.txt`.
-- **Slingshot layout change** — if the overlay template is restyled, the pixel-box constants break. Mitigation: D-003 config discipline + loud failure on layout mismatch.
-
-## Quick orientation for a fresh chat
-
-Read the other five knowledge files in this order:
-1. `01_project_spec.md` — what we're building and why
-2. `02_codebase_snapshot.md` — what exists, what's stubbed
-3. `03_decisions_log.md` — why things are the way they are
-4. `04_working_rules.md` — how we operate
-5. `06_unified_roadmap.md` — the sequenced phase plan
-
-Then re-read this file for current state.
-
-**Verification before proposing work:** name the current phase, name what's next, name one decision, name one stub, and state where that stub sits in the roadmap.
+## File locations
+pipeline/pipeline.py — orchestrator (two-pass)
+pipeline/segment.py — title diff segmentation
+pipeline/calibrate.py — base map from cached PNGs
+pipeline/detect.py — luminance diff + fold
+pipeline/aggregate.py — accumulate + seam roll
+pipeline/render.py — LUT + hero map
+pipeline/poster.py — composition
+api/main.py — FastAPI endpoints + basic auth
+web/src/App.jsx — React SPA with login modal

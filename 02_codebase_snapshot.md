@@ -77,8 +77,17 @@ screenshots.zip
 No database. Each job lives entirely in a temp directory; the API serves files from there (or uploads to S3 for production). Nothing leaks between jobs.
 
 ## What works today
+✅ Full pipeline end-to-end (Slices 0-7 complete)
+✅ Job API (Slice 8 complete)
+✅ React SPA (Slice 9 complete)
+✅ Deployed to Fly.io + Vercel (Slice 10 complete)
+✅ 40/40 unit tests passing
+✅ Golden master passing (presence_max=59, total=29,539, seam_col=693)
+✅ Live at totaleclipseoftheheatmap.com
 
-- ✅ Nothing yet — this is the project-start snapshot. Slice 0 (scaffold) is the first commit.
+## Active issues
+- Non-reference videos (non-2560px) fail with "No screenshot PNGs found"
+- Diagnostic logging added at f780a63, awaiting log output
 
 ## What's stubbed (work items, in slice order)
 
