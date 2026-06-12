@@ -27,6 +27,17 @@ def compose_poster(hero: np.ndarray, hourly_snapshots: list[dict], segments: lis
     y_bottom = crop.get("y_bottom", 1070)
     hero_cropped = hero[y_top:y_bottom, :]
 
+    # Scale to reference width for consistent poster dimensions
+    TARGET_W = 1197
+    if hero_cropped.shape[1] != TARGET_W:
+        scale = TARGET_W / hero_cropped.shape[1]
+        new_h = int(hero_cropped.shape[0] * scale)
+        hero_cropped = cv2.resize(
+            hero_cropped,
+            (TARGET_W, new_h),
+            interpolation=cv2.INTER_LANCZOS4
+        )
+
     # Step 2: Set poster dimensions
     hero_h, hero_w = hero_cropped.shape[:2]
     BANNER_H = 80
