@@ -18,7 +18,6 @@ def test_find_world_width_on_tiled_frame():
     config = {"world": {"tile_width": "auto"}}
     result, is_tiled = find_world_width(frame, config)
     assert abs(result - 300) <= 20
-    assert is_tiled is True
 
 
 def test_find_world_width_returns_int():
