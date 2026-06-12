@@ -59,3 +59,4 @@ def detect_frame(frame, base_map, config, is_tiled=True):
     wbinc = np.maximum(A, B)
 
     return wbinc > thr
+
