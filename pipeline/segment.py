@@ -34,6 +34,12 @@ def compute_title_diffs(mp4_path, config: dict) -> np.ndarray:
         sigs.append(small.flatten().astype(np.float32))
     cap.release()
 
+    if len(sigs) == 0:
+        raise ValueError(
+            f"Failed to read any frames from {mp4_path}. "
+            f"Unsupported video codec."
+        )
+
     sigs = np.array(sigs)
     diffs = np.zeros(len(sigs))
     for i in range(1, len(sigs)):

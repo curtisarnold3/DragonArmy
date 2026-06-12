@@ -176,6 +176,12 @@ def _extract_frames(mp4_path, segments, screenshots_dir,
             saved += 1
         idx += 1
     cap.release()
+    if saved == 0:
+        raise ValueError(
+            f"Failed to extract any frames from {mp4_path}. "
+            f"The video codec may not be supported. "
+            f"Ensure the video is H.264 encoded MP4."
+        )
     logger.info(f"Extracted {saved} frames to {screenshots_dir}")
 
 
