@@ -9,7 +9,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def compute_title_diffs(mp4_path, config: dict) -> tuple[np.ndarray, int, int]:
+def compute_title_diffs(mp4_path, config: dict) -> np.ndarray:
     """Sequential decode pass through entire video.
     Returns per-frame diff array of title region signatures plus video dimensions.
     Uses cv2.VideoCapture for fast sequential read — no seeking.
@@ -49,7 +49,7 @@ def compute_title_diffs(mp4_path, config: dict) -> tuple[np.ndarray, int, int]:
         diffs[i] = np.mean(np.abs(sigs[i] - sigs[i-1]))
 
     logger.info(f"Title diffs computed: {len(diffs)} frames")
-    return diffs, frame_width, frame_height
+    return diffs
 
 
 def find_segment_boundaries(
