@@ -138,7 +138,11 @@ def _extract_frames(mp4_path, segments, screenshots_dir,
     if not cap.isOpened():
         raise ValueError(f"Cannot open: {mp4_path}")
 
+    logger.info(f"VideoCapture opened: {cap.isOpened()}")
+    logger.info(f"Frame count: {int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}")
+    logger.info(f"Plan keys count: {len(plan)}")
     max_idx = max(plan.keys()) if plan else 0
+    logger.info(f"Max idx: {max_idx}")
     idx = 0
     saved = 0
     while idx <= max_idx:
@@ -157,6 +161,7 @@ def _extract_frames(mp4_path, segments, screenshots_dir,
             seg["file"] = fname
             saved += 1
         idx += 1
+    logger.info(f"Loop ended at idx={idx}, saved={saved}")
     cap.release()
     logger.info(f"Extracted {saved} frames to {screenshots_dir}")
 
