@@ -56,6 +56,9 @@ def detect_frame(frame, base_map, config, is_tiled=True):
     # Fold two world copies via per-pixel max
     A = binc[:, WW:2*WW]
     B = binc[:, 0:WW]
+    if A.shape != B.shape:
+        # Frame not wide enough for two tiles - treat as single copy
+        return binc > thr
     wbinc = np.maximum(A, B)
 
     return wbinc > thr
