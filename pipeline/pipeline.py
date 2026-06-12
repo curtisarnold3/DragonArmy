@@ -72,14 +72,8 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
 
     # ── Base map from cached PNGs ──
     progress("base_map", 50)
-    from pipeline.calibrate import build_base_map, find_world_width
+    from pipeline.calibrate import build_base_map
     base_map = build_base_map(screenshots_dir, config)
-
-    # Measure world width from base map and update config
-    ww = find_world_width(base_map, config)
-    logger.info(f"World width confirmed: {ww}px")
-    # Update config so all stages use the actual measured width
-    config["world"]["tile_width"] = ww
     progress("base_map", 55)
 
     # ── Accumulate from cached PNGs ──
