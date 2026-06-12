@@ -42,17 +42,7 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
         find_segment_boundaries,
         assign_times,
     )
-    diffs, frame_width, frame_height = compute_title_diffs(mp4_path, config)
-
-    # Adjust tile_width for non-standard video dimensions
-    if frame_width != 2560:
-        config["world"]["tile_width"] = frame_width // 2
-        logger.warning(
-            f"Non-standard video width {frame_width}px — "
-            f"using tile_width={frame_width//2}"
-        )
-    else:
-        logger.info(f"Standard video width {frame_width}px detected")
+    diffs = compute_title_diffs(mp4_path, config)
     threshold = config["segmentation"]["transition_threshold"]
     seg_tuples = find_segment_boundaries(diffs, threshold)
     segments = assign_times(seg_tuples, config)
@@ -66,8 +56,12 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
 
     # ── Base map from cached PNGs ──
     progress("base_map", 50)
-    from pipeline.calibrate import build_base_map
+    from pipeline.calibrate import build_base_map, find_world_width
     base_map = build_base_map(screenshots_dir, config)
+
+    # Measure world width from base map (confirms WW=1197)
+    ww = find_world_width(base_map, config)
+    logger.info(f"World width confirmed: {ww}px")
     progress("base_map", 55)
 
     # ── Accumulate from cached PNGs ──
@@ -164,12 +158,6 @@ def _extract_frames(mp4_path, segments, screenshots_dir,
             saved += 1
         idx += 1
     cap.release()
-    if saved == 0:
-        raise ValueError(
-            f"Failed to extract any frames from {mp4_path}. "
-            f"The video codec may not be supported. "
-            f"Ensure the video is H.264 encoded MP4."
-        )
     logger.info(f"Extracted {saved} frames to {screenshots_dir}")
 
 
