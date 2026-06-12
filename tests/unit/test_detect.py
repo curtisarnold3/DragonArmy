@@ -14,8 +14,8 @@ def cfg():
             "threshold": 14.0,
         },
         "masks": {
-            "title": {"x": [2, 4], "y": [0, 1]},
-            "logo":  {"x": [6, 8], "y": [0, 1]},
+            "title": {"x_norm": [0.1, 0.2], "y_norm": [0.0, 0.1]},  # 2/20=0.1, 4/20=0.2 for 20px wide frame
+            "logo":  {"x_norm": [0.3, 0.4], "y_norm": [0.0, 0.1]},  # 6/20=0.3, 8/20=0.4
         },
         "world": {"tile_width": 10},
     }

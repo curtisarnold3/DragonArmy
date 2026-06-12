@@ -57,7 +57,7 @@ def test_build_base_map_logo_paintout(tmp_path):
 
     cfg = {
         "base_map": {"sample_frames": 5},
-        "masks": {"logo": {"x": [150, 200], "y": [50, 100]}}
+        "masks": {"logo": {"x_norm": [0.75, 1.0], "y_norm": [0.5, 1.0]}}  # 150/200=0.75, 50/100=0.5
     }
     result = build_base_map(tmp_path, cfg)
 

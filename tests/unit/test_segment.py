@@ -9,27 +9,33 @@ from pipeline.segment import find_segment_boundaries, assign_times
 
 def test_find_segment_boundaries_detects_spikes():
     """Find segment boundaries detects spikes above threshold."""
-    diffs = np.zeros(30)
-    diffs[8] = 5.0    # transition at frame 8
-    diffs[20] = 6.0   # transition at frame 20
+    diffs = np.zeros(100)
+    diffs[10] = 9.0   # transition at frame 10
+    diffs[30] = 9.0   # transition at frame 30
+    diffs[50] = 9.0   # transition at frame 50
+    diffs[70] = 9.0   # transition at frame 70
+    diffs[90] = 9.0   # transition at frame 90
     boundaries = find_segment_boundaries(diffs, threshold=0.5)
     starts = [s for s, e in boundaries]
     assert 0 in starts
-    assert any(s >= 8 for s in starts)
-    assert any(s >= 20 for s in starts)
+    assert len(boundaries) >= 4
 
 
 def test_find_segment_boundaries_no_spikes():
-    """Find segment boundaries with no spikes returns only initial boundary."""
+    """Find segment boundaries with no spikes raises ValueError for < 4 segments."""
     diffs = np.zeros(30)   # 30 frames, no spikes
-    boundaries = find_segment_boundaries(diffs, threshold=0.5)
-    assert len(boundaries) == 1
-    assert boundaries[0][0] == 0
+    with pytest.raises(ValueError) as exc_info:
+        find_segment_boundaries(diffs, threshold=0.5)
+    assert "only 1 segments" in str(exc_info.value)
 
 
 def test_find_segment_boundaries_returns_sorted():
     """Find segment boundaries returns sorted list."""
-    diffs = np.array([0.1, 6.0, 0.1, 5.0, 0.1])
+    diffs = np.zeros(100)
+    diffs[10] = 9.0
+    diffs[30] = 9.0
+    diffs[50] = 9.0
+    diffs[70] = 9.0
     boundaries = find_segment_boundaries(diffs, threshold=0.5)
     starts = [s for s, e in boundaries]
     assert starts == sorted(starts)

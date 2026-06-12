@@ -18,7 +18,7 @@ def test_run_calls_progress_callback():
 
     with patch("pipeline.probe.probe", return_value={"nb_frames": 100, "width": 20, "height": 10}), \
          patch("pipeline.grabber.grab_frame", return_value=np.zeros((10, 20, 3), dtype=np.uint8)), \
-         patch("pipeline.calibrate.find_world_width", return_value=10), \
+         patch("pipeline.calibrate.find_world_width", return_value=(10, True)), \
          patch("pipeline.calibrate.build_base_map", return_value=np.zeros((10, 20, 3), dtype=np.uint8)), \
          patch("pipeline.segment.compute_title_diffs", return_value=np.zeros(99)), \
          patch("pipeline.segment.find_segment_boundaries", return_value=[0, 10, 20]), \
@@ -55,7 +55,7 @@ def test_run_returns_expected_keys():
 
     with patch("pipeline.probe.probe", return_value={"nb_frames": 100, "width": 20, "height": 10}), \
          patch("pipeline.grabber.grab_frame", return_value=np.zeros((10, 20, 3), dtype=np.uint8)), \
-         patch("pipeline.calibrate.find_world_width", return_value=10), \
+         patch("pipeline.calibrate.find_world_width", return_value=(10, True)), \
          patch("pipeline.calibrate.build_base_map", return_value=np.zeros((10, 20, 3), dtype=np.uint8)), \
          patch("pipeline.segment.compute_title_diffs", return_value=np.zeros(99)), \
          patch("pipeline.segment.find_segment_boundaries", return_value=[0, 10, 20]), \
