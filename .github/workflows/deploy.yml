@@ -1,0 +1,19 @@
+name: Deploy to Fly.io
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/**'
+      - 'api/**'
+      - 'docker/Dockerfile.fly'
+      - 'requirements.txt'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only --app curtarnold
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
