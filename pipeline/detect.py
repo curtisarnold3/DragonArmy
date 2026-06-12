@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 def detect_frame(frame, base_map, config):
-    """Isolate detections using proven working logic."""
+    """Isolate detections using proven working logic.
+    Supports any resolution via normalized mask coordinates.
+    """
     WW = int(config.get("world", {}).get("tile_width",
          frame.shape[1] // 2))
     H = base_map.shape[0]
@@ -22,13 +24,21 @@ def detect_frame(frame, base_map, config):
           0.299*diff[:,:,2])
     binc = np.clip(bl, 0, None).astype(np.float32)
 
-    # Mask overlays
+    # Mask overlays - compute absolute coords from normalized values
+    frame_h, frame_w = frame.shape[:2]
     title = config["masks"]["title"]
     logo = config["masks"]["logo"]
-    binc[title["y"][0]:title["y"][1],
-         title["x"][0]:title["x"][1]] = 0
-    binc[logo["y"][0]:logo["y"][1],
-         logo["x"][0]:logo["x"][1]] = 0
+    tx0 = int(title["x_norm"][0] * frame_w)
+    tx1 = int(title["x_norm"][1] * frame_w)
+    ty0 = int(title["y_norm"][0] * frame_h)
+    ty1 = int(title["y_norm"][1] * frame_h)
+    lx0 = int(logo["x_norm"][0] * frame_w)
+    lx1 = int(logo["x_norm"][1] * frame_w)
+    ly0 = int(logo["y_norm"][0] * frame_h)
+    ly1 = int(logo["y_norm"][1] * frame_h)
+
+    binc[ty0:ty1, tx0:tx1] = 0
+    binc[ly0:ly1, lx0:lx1] = 0
 
     # Fold two world copies via per-pixel max
     A = binc[:, WW:2*WW]

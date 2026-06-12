@@ -11,12 +11,11 @@ logger = logging.getLogger(__name__)
 
 def compute_title_diffs(mp4_path, config: dict) -> np.ndarray:
     """Sequential decode pass through entire video.
-    Returns per-frame diff array of title region signatures plus video dimensions.
+    Returns per-frame diff array of title region signatures.
     Uses cv2.VideoCapture for fast sequential read — no seeking.
+    Supports any resolution via normalized mask coordinates.
     """
     mp4_path = str(mp4_path)
-    tx1, ty1 = config["masks"]["title"]["x"][0], config["masks"]["title"]["y"][0]
-    tx2, ty2 = config["masks"]["title"]["x"][1], config["masks"]["title"]["y"][1]
 
     cap = cv2.VideoCapture(mp4_path)
     if not cap.isOpened():
@@ -25,16 +24,11 @@ def compute_title_diffs(mp4_path, config: dict) -> np.ndarray:
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    # Validate resolution matches expected layout
-    expected_width = config.get("layout", {}).get("expected_width", 2560)
-    expected_height = config.get("layout", {}).get("expected_height", 1198)
-    if frame_width != expected_width or frame_height != expected_height:
-        cap.release()
-        raise ValueError(
-            f"Layout mismatch: video is {frame_width}×{frame_height}, "
-            f"expected {expected_width}×{expected_height}. "
-            f"This pipeline only supports the Slingshot GNSS SPOOFING (Standard) layout."
-        )
+    # Compute absolute pixel coords from normalized config values
+    tx1 = int(config["masks"]["title"]["x_norm"][0] * frame_width)
+    tx2 = int(config["masks"]["title"]["x_norm"][1] * frame_width)
+    ty1 = int(config["masks"]["title"]["y_norm"][0] * frame_height)
+    ty2 = int(config["masks"]["title"]["y_norm"][1] * frame_height)
 
     sigs = []
     while True:
@@ -99,6 +93,14 @@ def find_segment_boundaries(
 
     logger.info(f"Segments: {len(segs)} "
                 f"(from {len(merged)} clean transitions)")
+
+    # Sanity check: must find at least 10 segments for valid Slingshot video
+    if len(segs) < 10:
+        raise ValueError(
+            f"Segmentation found only {len(segs)} segments — title region may not "
+            f"match this video's layout. Check that this is a Slingshot GNSS SPOOFING video."
+        )
+
     return segs
 
 

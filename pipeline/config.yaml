@@ -1,9 +1,6 @@
 # GNSS-AGG Configuration
 # Layout constants and detection parameters for Slingshot "GNSS SPOOFING (Standard)" layout
-
-layout:
-  expected_width: 2560
-  expected_height: 1198
+# All mask coordinates are normalized (0.0-1.0) to support multiple resolutions
 
 base_map:
   method: temporal_median
@@ -11,11 +8,11 @@ base_map:
 
 masks:
   title:
-    x: [840, 1730]
-    y: [60, 140]
+    x_norm: [0.328, 0.676]   # 840/2560, 1730/2560
+    y_norm: [0.050, 0.117]   # 60/1198, 140/1198
   logo:
-    x: [2360, 2560]
-    y: [1120, 1198]
+    x_norm: [0.922, 1.000]   # 2360/2560, 2560/2560
+    y_norm: [0.935, 1.000]   # 1120/1198, 1198/1198
 
 world:
   tile_width: 1197

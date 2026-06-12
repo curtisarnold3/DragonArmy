@@ -79,8 +79,13 @@ def build_base_map(
     # Paint logo box with surrounding ocean color
     logo = config.get("masks", {}).get("logo")
     if logo:
-        x0, x1 = logo["x"]
-        y0, y1 = logo["y"]
+        # Compute absolute coords from normalized values
+        frame_h, frame_w = base.shape[:2]
+        x0 = int(logo["x_norm"][0] * frame_w)
+        x1 = int(logo["x_norm"][1] * frame_w)
+        y0 = int(logo["y_norm"][0] * frame_h)
+        y1 = int(logo["y_norm"][1] * frame_h)
+
         by0 = max(0, y0 - 10)
         by1 = min(base.shape[0], y1 + 10)
         bx0 = max(0, x0 - 10)
