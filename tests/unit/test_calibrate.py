@@ -16,8 +16,9 @@ def test_find_world_width_on_tiled_frame():
     frame = np.concatenate([tile, tile], axis=1)  # shape: (100, 600, 3)
 
     config = {"world": {"tile_width": "auto"}}
-    result = find_world_width(frame, config)
+    result, is_tiled = find_world_width(frame, config)
     assert abs(result - 300) <= 20
+    assert is_tiled is True
 
 
 def test_find_world_width_returns_int():
@@ -28,7 +29,9 @@ def test_find_world_width_returns_int():
     frame = np.concatenate([tile, tile], axis=1)
 
     config = {"world": {"tile_width": "auto"}}
-    assert isinstance(find_world_width(frame, config), int)
+    result, is_tiled = find_world_width(frame, config)
+    assert isinstance(result, int)
+    assert isinstance(is_tiled, bool)
 
 
 def test_build_base_map_shape_and_dtype(tmp_path):

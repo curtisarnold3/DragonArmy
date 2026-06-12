@@ -15,8 +15,8 @@ def cfg():
             "threshold": 14.0,
         },
         "masks": {
-            "title": {"x": [2, 4], "y": [0, 1]},
-            "logo":  {"x": [6, 8], "y": [0, 1]},
+            "title": {"x_norm": [0.1, 0.2], "y_norm": [0.0, 0.1]},  # 2/20=0.1, 4/20=0.2
+            "logo":  {"x_norm": [0.3, 0.4], "y_norm": [0.0, 0.1]},  # 6/20=0.3, 8/20=0.4
         },
         "segmentation": {"representative_position": 0.55},
         "seam_roll": {"smoothing_kernel": 3},
