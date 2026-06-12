@@ -172,7 +172,7 @@ def _build_hourly_snapshots(segments, screenshots_dir,
     from pipeline.detect import detect_frame
     cadence = config.get("hourly", {}).get("cadence_steps", 6)
     WW = int(config["world"]["tile_width"])
-    world_bg = base_map[:, WW:2*WW]
+    world_bg = base_map[:, WW:2*WW] if is_tiled else base_map
     results = []
     for seg in segments:
         if seg["window_num"] % cadence != 0:
@@ -186,6 +186,8 @@ def _build_hourly_snapshots(segments, screenshots_dir,
             continue
         detected = detect_frame(frame, base_map, config, is_tiled=is_tiled)
         snapshot = world_bg.copy()
+        if is_tiled:
+            detected = detected[:, :WW]
         snapshot[detected] = [255, 255, 0]
         results.append({"segment": seg, "image": snapshot})
     logger.info(f"Built {len(results)} hourly snapshots")
