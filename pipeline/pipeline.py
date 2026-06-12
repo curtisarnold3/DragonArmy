@@ -35,6 +35,22 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
     with open(Path(__file__).parent / "config.yaml") as f:
         config = yaml.safe_load(f)
 
+    # Detect video dimensions and adjust tile_width if needed
+    cap = cv2.VideoCapture(str(mp4_path))
+    if not cap.isOpened():
+        raise ValueError(f"Cannot open video: {mp4_path}")
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    cap.release()
+
+    if frame_width != 2560:
+        config["world"]["tile_width"] = frame_width // 2
+        logger.warning(
+            f"Non-standard video width {frame_width}px — "
+            f"using tile_width={frame_width//2}"
+        )
+    else:
+        logger.info(f"Standard video width {frame_width}px detected")
+
     # ── PASS 1: Sequential decode → title diffs → segments ──
     progress("segment", 5)
     from pipeline.segment import (
@@ -59,9 +75,11 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
     from pipeline.calibrate import build_base_map, find_world_width
     base_map = build_base_map(screenshots_dir, config)
 
-    # Measure world width from base map (confirms WW=1197)
+    # Measure world width from base map and update config
     ww = find_world_width(base_map, config)
     logger.info(f"World width confirmed: {ww}px")
+    # Update config so all stages use the actual measured width
+    config["world"]["tile_width"] = ww
     progress("base_map", 55)
 
     # ── Accumulate from cached PNGs ──
