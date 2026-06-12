@@ -22,12 +22,6 @@ def find_world_width(base_map: np.ndarray,
         - is_tiled: True if two world copies detected, False for single copy
     """
 
-    # Check config for pinned value
-    tw = config.get("world", {}).get("tile_width", "auto")
-    if tw != "auto":
-        logger.info(f"World width from config: {tw}px (tiled assumed)")
-        return int(tw), True
-
     # Autocorrelation on equatorial band of base map
     g = cv2.cvtColor(base_map,
                      cv2.COLOR_BGR2GRAY).astype(np.float32)
@@ -54,6 +48,12 @@ def find_world_width(base_map: np.ndarray,
     mean_value = ac.mean()
     confidence = peak_value / mean_value if mean_value > 0 else 0.0
     is_tiled = confidence >= 2.0
+
+    # Check config for pinned value
+    tw = config.get("world", {}).get("tile_width", "auto")
+    if tw != "auto":
+        logger.info(f"World width from config: {tw}px, tiled: {is_tiled} (confidence: {confidence:.2f})")
+        return int(tw), is_tiled
 
     logger.info(f"World width: {top}px, tiled: {is_tiled} (confidence: {confidence:.2f})")
     return int(top), is_tiled
