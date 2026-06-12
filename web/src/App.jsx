@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import Dropzone from './components/Dropzone'
 import ProgressBar from './components/ProgressBar'
 import ResultPanel from './components/ResultPanel'
@@ -12,7 +12,6 @@ const STAGES = [
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export default function App() {
-  const audioRef = useRef(null)
   const [authed, setAuthed] = useState(false)
   const [creds, setCreds] = useState({u:'', p:''})
   const [authError, setAuthError] = useState(false)
@@ -40,9 +39,6 @@ export default function App() {
       setAuthed(true)
       setAuthError(false)
       setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.play().catch(() => {})
-        }
       }, 300)
     }
   }
@@ -127,7 +123,6 @@ export default function App() {
         </div>
       ) : (
         <>
-          <audio ref={audioRef} src="/totaleclipse.mp3" preload="auto" />
           <h1 className="text-2xl font-bold text-white mb-2">
             GNSS Spoofing Aggregator
           </h1>
