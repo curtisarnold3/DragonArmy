@@ -51,10 +51,12 @@ def find_world_width(base_map: np.ndarray,
 
     # Check config for pinned value
     tw = config.get("world", {}).get("tile_width", "auto")
+    # Simple tiling detection: if frame is less than 1.6x tile_width, single-copy
+    frame_w = base_map.shape[1]
     if tw != "auto":
-        logger.info(f"World width from config: {tw}px, tiled: {is_tiled} (confidence: {confidence:.2f})")
+        is_tiled = frame_w >= int(tw) * 1.9
+        logger.info(f"Tiling detection: frame_w={frame_w}, tile_width={tw}, is_tiled={is_tiled}")
         return int(tw), is_tiled
-
     logger.info(f"World width: {top}px, tiled: {is_tiled} (confidence: {confidence:.2f})")
     return int(top), is_tiled
 
