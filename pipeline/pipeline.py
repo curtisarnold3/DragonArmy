@@ -35,13 +35,16 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
     with open(Path(__file__).parent / "config.yaml") as f:
         config = yaml.safe_load(f)
 
-    # Detect video dimensions and adjust tile_width if needed
-    cap = cv2.VideoCapture(str(mp4_path))
-    if not cap.isOpened():
-        raise ValueError(f"Cannot open video: {mp4_path}")
-    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    cap.release()
+    # ── PASS 1: Sequential decode → title diffs → segments ──
+    progress("segment", 5)
+    from pipeline.segment import (
+        compute_title_diffs,
+        find_segment_boundaries,
+        assign_times,
+    )
+    diffs, frame_width, frame_height = compute_title_diffs(mp4_path, config)
 
+    # Adjust tile_width for non-standard video dimensions
     if frame_width != 2560:
         config["world"]["tile_width"] = frame_width // 2
         logger.warning(
@@ -50,15 +53,6 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
         )
     else:
         logger.info(f"Standard video width {frame_width}px detected")
-
-    # ── PASS 1: Sequential decode → title diffs → segments ──
-    progress("segment", 5)
-    from pipeline.segment import (
-        compute_title_diffs,
-        find_segment_boundaries,
-        assign_times,
-    )
-    diffs = compute_title_diffs(mp4_path, config)
     threshold = config["segmentation"]["transition_threshold"]
     seg_tuples = find_segment_boundaries(diffs, threshold)
     segments = assign_times(seg_tuples, config)
