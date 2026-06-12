@@ -87,7 +87,7 @@ def run(mp4_path, output_dir, progress_callback=None) -> dict:
     # ── Hourly snapshots ──
     progress("render", 85)
     hourly = _build_hourly_snapshots(
-        segments, screenshots_dir, base_map, config
+        segments, screenshots_dir, base_map, config, is_tiled=is_tiled
     )
 
     # ── Compose poster ──
@@ -167,7 +167,7 @@ def _extract_frames(mp4_path, segments, screenshots_dir,
 
 
 def _build_hourly_snapshots(segments, screenshots_dir,
-                             base_map, config) -> list[dict]:
+                             base_map, config, is_tiled=True) -> list[dict]:
     """Build hourly snapshot list from cached PNGs."""
     from pipeline.detect import detect_frame
     cadence = config.get("hourly", {}).get("cadence_steps", 6)
