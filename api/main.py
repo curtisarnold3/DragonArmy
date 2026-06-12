@@ -1,4 +1,5 @@
 """FastAPI job endpoints for GNSS Spoofing Aggregator."""
+# Last deployed: 2026-06-12
 
 import uuid
 import asyncio
